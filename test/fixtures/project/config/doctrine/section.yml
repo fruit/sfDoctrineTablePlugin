@@ -1,0 +1,37 @@
+Section:
+  options:
+    symfony: { form: false, filter: false }
+  actAs:
+    SoftDelete:
+      name: removed_at
+    Timestampable: ~
+    I18n:
+      fields: [name]
+      type: string
+      length: 10
+      options:
+        fixed: false
+      actAs:
+        Sluggable:
+          unique: true
+          fields: [name]
+          canUpdate: true
+          uniqueBy: [lang, name]
+  columns:
+    id:
+      type: integer(4)
+      primary: true
+      autoincrement: true
+      unsigned: true
+      notnull: true
+    name: string(127)
+    is_visible: boolean(false)
+  indexes:
+    sec_is_visibled: { fields: [is_visible] }
+  relations:
+    Posts:
+      class: Post
+      local: id
+      type: many
+      foreignType: one
+      foreign: section_id

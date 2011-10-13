@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<package
+  xmlns="http://pear.php.net/dtd/package-2.0"
+  xmlns:tasks="http://pear.php.net/dtd/tasks-1.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  packagerversion="1.4.6"
+  version="2.0"
+  xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
+  <name>sfDoctrineTablePlugin</name>
+  <channel>pear.symfony-project.com</channel>
+  <summary></summary>
+  <description>
+
+  </description>
+  <lead>
+    <name>Ilya Sabelnikov</name>
+    <user>ilya</user>
+    <email>fruit.dev@gmail.com</email>
+    <active>yes</active>
+  </lead>
+  <date></date>
+  <time></time>
+  <version>
+    <release>1.0.0</release>
+    <api>1.0.0</api>
+  </version>
+  <stability>
+    <release>alpha</release>
+    <api>alpha</api>
+  </stability>
+  <license uri="http://www.symfony-project.com/license">MIT</license>
+  <notes>
+
+  </notes>
+  <contents>
+    <dir name="/"></dir>
+  </contents>
+  <dependencies>
+    <required>
+      <php>
+        <min>5.3.0</min>
+      </php>
+      <pearinstaller>
+        <min>1.4.1</min>
+      </pearinstaller>
+      <package>
+        <name>symfony</name>
+        <channel>pear.symfony-project.com</channel>
+        <min>1.3.0</min>
+        <max>1.5.0</max>
+        <exclude>1.5.0</exclude>
+      </package>
+    </required>
+  </dependencies>
+  <phprelease />
+  <changelog>
+    <release>
+      <version>
+        <release>1.0.0</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+        <release>alpha</release>
+        <api>alpha</api>
+      </stability>
+      <date></date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+
+      </notes>
+    </release>
+  </changelog>
+</package>

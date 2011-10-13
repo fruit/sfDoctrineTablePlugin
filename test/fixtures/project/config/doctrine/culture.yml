@@ -1,0 +1,34 @@
+detect_relations: false
+options:
+  type: InnoDB
+  collation: utf8_general_ci
+  charset: utf8
+
+Culture:
+  actAs:
+    Timestampable: ~
+    I18n:
+      fields: [title]
+  options:
+    symfony: { form: false, filter: false }
+  columns:
+    id:
+      type: integer(4)
+      primary: true
+      autoincrement: true
+      unsigned: true
+      notnull: true
+    code: string(10)
+    name: string(63)
+    title: string(255)
+    is_visible: boolean(false)
+  indexes:
+    cut_code: { fields: [code], type: unique }
+    cut_is_visibled: { fields: [is_visible] }
+  relations:
+    Posts:
+      class: Post
+      local: id
+      type: many
+      foreignType: one
+      foreign: culture_id

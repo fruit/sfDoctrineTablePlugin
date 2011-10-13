@@ -1,0 +1,34 @@
+detect_relations: true
+options:
+  type:    InnoDB
+  charset: utf8
+  collate: utf8_general_ci
+
+sfGuardUser:
+  options:
+    symfony: { form: false, filter: false }
+
+sfGuardUserGroup:
+  options:
+    symfony: { form: false, filter: false, table: false }
+
+sfGuardUserPermission:
+  options:
+    symfony: { form: false, filter: false }
+
+sfGuardRememberKey:
+  options:
+    symfony: { form: false, filter: false }
+
+sfGuardGroup:
+  options:
+    symfony: { form: false, filter: false, table: false }
+
+sfGuardPermission:
+  options:
+    symfony: { form: false, filter: false }
+
+sfGuardGroupPermission:
+  options:
+    symfony: { form: false, filter: false, table: false }
+

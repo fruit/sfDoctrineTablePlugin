@@ -1,0 +1,37 @@
+detect_relations: false
+options:
+  type: InnoDB
+  collation: utf8_general_ci
+  charset: utf8
+
+PostReference:
+  options:
+    symfony: { form: false, filter: false }
+  relations:
+    Child:
+      class: Post
+      local: child_id
+      foreign: id
+      type: one
+      foreignType: many
+      foreignAlias: ChildPosts
+      onDelete: CASCADE
+      onUpdate: CASCADE
+    Parent:
+      class: Post
+      local: parent_id
+      foreign: id
+      type: one
+      foreignType: many
+      foreignAlias: ParentPosts
+      onDelete: CASCADE
+      onUpdate: CASCADE
+  columns:
+    child_id:
+      type: integer(4)
+      primary: true
+      unsigned: true
+    parent_id:
+      type: integer(4)
+      primary: true
+      unsigned: true

@@ -1,0 +1,34 @@
+Culture:
+  c01:
+    code: en
+    is_visible: 1
+    name: English
+  c02:
+    code: en_US
+    is_visible: 1
+    name: English (United States)
+  c03:
+    code: en_ZA
+    is_visible: 0
+    name: English (South Africa)
+  c04:
+    code: ru
+    is_visible: 1
+    name: Russian
+    Translation:
+      ru: { title: Русский }
+      en: { title: Russian }
+      de: { title: Russische }
+      lv: { title: Krievu }
+  c05:
+    code: de
+    is_visible: 1
+    name: German
+  c06:
+    code: fr
+    is_visible: 1
+    name: French
+  c07:
+    code: af
+    is_visible: 0
+    name: Afrikaans

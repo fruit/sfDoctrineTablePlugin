@@ -1,0 +1,24 @@
+Section:
+  s01:
+    is_visible: 1
+    Translation:
+      en:
+        name: Symfony framework
+      ru:
+        name: Symfony фреймворк
+
+  s02:
+    is_visible: 1
+    Translation:
+      en:
+        name: PHP 5.3
+      ru:
+        name: PHP 5.3
+
+  s03:
+    is_visible: 1
+    Translation:
+      en:
+        name: Redis
+      ru:
+        name: Redis

@@ -1,0 +1,23 @@
+dev:
+  doctrine:
+    class:        sfDoctrineDatabase
+    param:
+      classname:  DoctrinePDO
+      dsn:        sqlite:///%SF_DATA_DIR%/db/sfdoctrinetableplugin_dev.db?mode=0666
+      encoding:   utf8
+      persistent: true
+
+test:
+  doctrine:
+    class:        sfDoctrineDatabase
+    param:
+      classname:  DoctrinePDO
+      dsn:        sqlite:///%SF_DATA_DIR%/db/sfdoctrinetableplugin_test.db?mode=0666
+      encoding:   utf8
+      persistent: true
+
+all:
+  doctrine:
+    class: sfDoctrineDatabase
+    param:
+      classname:  DoctrinePDO

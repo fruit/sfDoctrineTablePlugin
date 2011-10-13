@@ -1,0 +1,68 @@
+detect_relations: false
+options:
+  type: InnoDB
+  collation: utf8_general_ci
+  charset: utf8
+
+Post:
+  actAs:
+    Timestampable: ~
+    Sluggable:
+      unique: true
+      fields: [title]
+      canUpdate: true
+  options:
+    symfony: { form: false, filter: false }
+  columns:
+    id:
+      type: integer(4)
+      unsigned: true
+      primary: true
+      autoincrement: true
+      notnull: true
+    culture_id:
+      type: integer(4)
+      unsigned: true
+      notnull: false
+      default: null
+    section_id:
+      type: integer(4)
+      unsigned: true
+      notnull: false
+      default: null
+    is_enabled: boolean(false)
+    is_commentable: boolean(true)
+    title: string(255)
+    keywords: string(255)
+    content: clob
+  indexes:
+    pst_slug: { fields: [slug], type: unique }
+    pst_culture_id: { fields: [culture_id] }
+    pst_section_id: { fields: [section_id] }
+    pst_is_enabled: { fields: [is_enabled] }
+    pst_is_commentable: { fields: [is_commentable] }
+  relations:
+    Section:
+      class: Section
+      local: section_id
+      foreign: id
+      foreignAlias: Posts
+      type: one
+      foreignType: many
+      onDelete: CASCADE
+      onUpdate: CASCADE
+    Culture:
+      class: Culture
+      local: culture_id
+      foreign: id
+      foreignAlias: Cultures
+      type: one
+      foreignType: many
+      onDelete: CASCADE
+      onUpdate: CASCADE
+    Referenced:
+      class: Post
+      local: child_id
+      foreign: parent_id
+      refClass: PostReference
+      equal: true
