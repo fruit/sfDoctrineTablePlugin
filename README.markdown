@@ -196,7 +196,7 @@ template by extending it.
   That is - no extra code, smallest file size. Things are done by implementing ``PHPDoc`` directive @method.
 
   Here is code sample of generated base table for model Post - file ``BasePostTable.class.php``
-  preview on [http://pastie.org](http://pastie.org/private/wh5wn0ntvfkuoizjwka "Preview")
+  preview on [http://pastie.org/private/wh5wn0ntvfkuoizjwka](http://pastie.org/private/wh5wn0ntvfkuoizjwka "Preview")
 
   As you could observe, additionally PHPDoc contains ``@c`` directives:
 
