@@ -1,0 +1,28 @@
+detect_relations: false
+
+Country:
+  options:
+    symfony: { form: false, filter: false }
+  columns:
+    id: { type: integer(4), primary: true, autoincrement: true }
+    capital_city_id: { type: integer(4) }
+    title: string(255)
+  relations:
+    Capital:
+      class: City
+      local: capital_city_id
+      foreign: id
+      type: one
+      foreignType: one
+      foreignAlias: CapitalOfTheCountry
+
+City:
+  options:
+    symfony: { form: false, filter: false }
+  columns:
+    id: { type: integer(4), primary: true, autoincrement: true }
+    country_id: { type: integer(4) }
+    title: string(255)
+  relations:
+    Country:
+      foreignAlias: Cities

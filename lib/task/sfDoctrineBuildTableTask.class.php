@@ -29,8 +29,13 @@
         new sfCommandOption('minified', null, sfCommandOption::PARAMETER_NONE, 'Whether to remove @method comments from file'),
         new sfCommandOption('uninstall', null, sfCommandOption::PARAMETER_NONE, 'Cleans generated base model tables, and reverts its content to default'),
         new sfCommandOption('generator-class', null, sfCommandOption::PARAMETER_REQUIRED, 'The generator class', 'sfDoctrineTableGenerator'),
-        new sfCommandOption('no-confirmation', null, sfCommandOption::PARAMETER_NONE, 'Whether to force modifing the generated model classes within lib/model/doctrine')
+        new sfCommandOption('no-confirmation', null, sfCommandOption::PARAMETER_NONE, 'Whether to force modifing the generated model classes within lib/model/doctrine'),
       ));
+
+      $this->addArguments(array(
+        new sfCommandArgument('name', sfCommandArgument::OPTIONAL | sfCommandArgument::IS_ARRAY, 'Model name for which to generate base tables.'),
+      ));
+
 
       $this->namespace = 'doctrine';
       $this->name = 'build-table';
@@ -66,6 +71,39 @@ EOF;
     {
       $this->logSection('doctrine', 'generating generic table classes');
 
+      if (0 >= $options['depth'])
+      {
+        $this->logBlock('Value --depth is a number from 1 to N', 'ERROR');
+        return false;
+      }
+
+      if (! class_exists($options['generator-class']))
+      {
+        $this->logBlock(sprintf('Generator class "%s" not found.', $options['generator-class']), 'ERROR');
+        return false;
+      }
+
+      $databaseManager = new sfDatabaseManager($this->configuration);
+      $sfDoctrinePlugin = $this->configuration->getPluginConfiguration('sfDoctrinePlugin');
+
+      if (! empty ($arguments['name']))
+      {
+        foreach ($arguments['name'] as $modelName)
+        {
+          Doctrine_Core::modelsAutoload($modelName);
+
+          if (! class_exists($modelName))
+          {
+            $this->logBlock(
+              sprintf('Model name "%s" is not registered in current connection', $modelName),
+              'ERROR'
+            );
+
+            return;
+          }
+        }
+      }
+
       if (
         ! $options['no-confirmation']
         &&
@@ -84,27 +122,15 @@ EOF;
         return 1;
       }
 
-      if (0 >= $options['depth'])
-      {
-        $this->logBlock('Value --depth is a number from 1 to N', 'ERROR');
-        return false;
-      }
-
-      if (! class_exists($options['generator-class']))
-      {
-        $this->logBlock(sprintf('Generator class "%s" not found.', $options['generator-class']), 'ERROR');
-        return false;
-      }
-
-      $databaseManager = new sfDatabaseManager($this->configuration);
-
       $generatorManager = new sfGeneratorManager($this->configuration);
       $generatorManager->generate($options['generator-class'], array(
         'env'       => (string) $options['env'],
-        'depth'      => ((int) $options['depth']) - 1,
+        'depth'     => ((int) $options['depth']) - 1,
         'minified'  => (bool) $options['minified'],
         'uninstall' => (bool) $options['uninstall'],
+        'models'    => $arguments['name'],
       ));
+
 
       $properties = array();
       $iniFile = sfConfig::get('sf_config_dir').DIRECTORY_SEPARATOR.'properties.ini';
@@ -123,16 +149,28 @@ EOF;
           : 'Your name here',
       );
 
-      $builderOptions = $this
-        ->configuration
-        ->getPluginConfiguration('sfDoctrinePlugin')
-        ->getModelBuilderOptions()
+      $builderOptions = $sfDoctrinePlugin->getModelBuilderOptions();
+
+      if (! empty($arguments['name']))
+      {
+        $baseTableFilenames = array_map(
+          function($modelName) use ($builderOptions) {
+            return "Base{$modelName}Table{$builderOptions['suffix']}";
+          },
+          $arguments['name']
+        );
+      }
+      else
+      {
+        $baseTableFilenames = "Base*Table{$builderOptions['suffix']}";
+      }
+
+      $doctrineCliConfig = $sfDoctrinePlugin->getCliConfig();
+
+      $files = sfFinder::type('file')
+        ->name($baseTableFilenames)
+        ->in($doctrineCliConfig['models_path'])
       ;
-
-      $finder = sfFinder::type('file')->name("Base*Table{$builderOptions['suffix']}");
-
-      $doctrineCliConfig = $this->configuration->getPluginConfiguration('sfDoctrinePlugin')->getCliConfig();
-      $files = $finder->in($doctrineCliConfig['models_path']);
 
       $this->getFilesystem()->replaceTokens($files, '##', '##', $constants);
 

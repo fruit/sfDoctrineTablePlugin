@@ -10,7 +10,11 @@
   <channel>pear.symfony-project.com</channel>
   <summary></summary>
   <description>
-
+    The ``sfDoctrineTablePlugin`` generates feature packed base tables to each model.
+Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT``
+and ``JOIN`` considering table relations and its depth. List of new available
+methods are accessed through the PHPDoc tag @method and are suitable for IDE
+users only.
   </description>
   <lead>
     <name>Ilya Sabelnikov</name>

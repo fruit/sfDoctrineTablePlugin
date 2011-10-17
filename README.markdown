@@ -1,10 +1,10 @@
 # sfDoctrineTablePlugin
 
 The ``sfDoctrineTablePlugin`` generates feature packed base tables to each model.
-Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT`` and ``JOIN``s
-considering table relations and its depth. List of new available methods are accessed through
-the PHPDoc tag @method and are suitable for IDE users only
-(prefect implementation in [NetBeans 7.1](http://netbeans.org/downloads/index.html "NetBeans Download page"))
+Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT``
+and ``JOIN`` considering table relations and its depth. List of new available
+methods are accessed through the PHPDoc tag @method and are suitable for IDE
+users only (prefect implementation in [NetBeans 7.1](http://netbeans.org/downloads/index.html "NetBeans Download page"))
 
 # Table of contents
 
@@ -14,13 +14,16 @@ the PHPDoc tag @method and are suitable for IDE users only
  1. <a href="#uninstall">Uninstalling</a>
  1. <a href="#setup">Setup</a>
    1. <a href="#h5_1">Check plugin is enabled</a>
-   1. <a href="#h5_2">Configure (optionally)</a>
+   1. <a href="#h5_2">Configure</a>
+     1. <a href="#h5_2_1">Plugin</a>
+     1. <a href="#h5_2_2">Model</a>
    1. <a href="#h5_3">Execute task</a>
      1. <a href="#h5_3_1">Usage</a>
      1. <a href="#h5_3_2">Build base tables</a>
      1. <a href="#h5_3_3">Customize JOIN's deepness</a>
      1. <a href="#h5_3_4">Optimize tables for production</a>
    1. <a href="#h5_4">Turning off base table generation for specific models</a>
+   1. <a href="#h5_5">Base tables generation for a specific models</a>
  1. <a href="#how">How it works</a>
  1. <a href="#problem">Known problem</a>
  1. <a href="#bench">Benchmarks</a>
@@ -67,13 +70,14 @@ template by extending it.
 
 # 4. <a id="uninstall">Uninstalling</a>
 
-  Unusual uninstalling process! First of all you should rollback your base table class
-  inheritance and remove generated base table classes for models. All that you can
-  make by executing:
+  Unusual uninstalling process! First of all you should rollback your base table
+  class inheritance and remove generated base table classes for models. All that
+  you can make by executing:
 
     ./symfony doctrine:build-table --uninstall
 
-  In case, you had your own ``Doctrine_Table`` class (e.g. ``Doctrine_Table_Advanced``), you need replace inherited
+  In case, you had your own ``Doctrine_Table`` class
+  (e.g. ``Doctrine_Table_Advanced``), you need replace inherited
   class from ``Doctrine_Table_Scoped`` back to ``Doctrine_Table_Advanced``.
 
   And after, usual uninstalling process:
@@ -86,7 +90,7 @@ template by extending it.
 
 # 5. <a id="setup">Setup</a>
 
-## 5.1. <a id="">Check plugin is enabled</a>
+## 5.1. <a id="h5_1">Check plugin is enabled</a>
 
     [php]
     <?php
@@ -100,7 +104,9 @@ template by extending it.
       }
     }
 
-## 5.2. <a id="">Configure (optionally)</a>
+## 5.2. <a id="h5_2">Configure</a>
+
+### 5.2.1 <a id="h5_2_1">Plugin</a>
 
     all:
       sf_doctrine_table_plugin:
@@ -116,7 +122,8 @@ template by extending it.
       sf_doctrine_table_plugin:
         custom_table_class: Doctrine_Table_Advanced
 
-  Also, class ``Doctrine_Table_Advanced`` should be extended from ``Doctrine_Table_Scoped`` - that's all
+  Also, class ``Doctrine_Table_Advanced`` should be extended from
+  ``Doctrine_Table_Scoped`` - that's all
 
     [php]
     <?php
@@ -126,11 +133,81 @@ template by extending it.
       // ...
     }
 
+### 5.2.1 <a id="h5_2_2">Model</a>
+
+  By default base tables will be generated to all models and to all enabled
+  plugins that contains schema files. Occasionally, you won't use
+  all models to query its data, some of them will be used to save data. In
+  such cases is reasonable to disable the base tables generation. How to do that
+  please refer to <a href="#h5_4">5.4. Turning off base table generation for
+  specific models</a>.
+
+  According to my own experience, the most profit you will get in case you disable
+  automatic relation detection (``detect_relations: false``) and setup only important
+  to you relations by hand. Advantages to this solutions is sweet generated method
+  names and its small file size on disk (APC will be thankful to you).
+
+  Here is small ``schema.yml`` example:
+
+    detect_relations: false
+
+    Country:
+      columns:
+        id: { type: integer(4), primary: true, autoincrement: true }
+        capital_city_id: { type: integer(4) }
+        title: string(255)
+      relations:
+        Capital:
+          class: City
+          local: capital_city_id
+          foreign: id
+          type: one
+          foreignType: one
+          foreignAlias: CapitalOfTheCountry
+
+    City:
+      columns:
+        id: { type: integer(4), primary: true, autoincrement: true }
+        country_id: { type: integer(4) }
+        title: string(255)
+      relations:
+        Country:
+          foreignAlias: Cities
+
+
+  After base table are generated, you can see following methods beside other methods:
+
+    $q = CityTable::getInstance()->createQuery('ci');
+    CityTable::getInstance()
+      ->withInnerJoinOnCountry($q)
+      ->withLeftJoinOnCapitalViaCountry($q)
+      ->withLeftJoinOnCapitalOfTheCountryViaCountryAndCapital($q);
+
+  The generated SQL (``$q->getSqlQuery()``) will looks like:
+
+    SELECT
+      c.id AS c__id, c.country_id AS c__country_id, c.title AS c__title,
+      c2.id AS c2__id, c2.capital_city_id AS c2__capital_city_id, c2.title AS c2__title,
+      c3.id AS c3__id, c3.country_id AS c3__country_id, c3.title AS c3__title,
+      c4.id AS c4__id, c4.capital_city_id AS c4__capital_city_id, c4.title AS c4__title
+    FROM city c
+      INNER JOIN country c2 ON c.country_id = c2.id
+      LEFT JOIN city c3 ON c2.capital_city_id = c3.id
+      LEFT JOIN country c4 ON c3.id = c4.capital_city_id
+
+  And here is DQL (``$q->getDql()``) will looks like:
+
+     FROM City ci
+      INNER JOIN ci.Country c
+      LEFT JOIN c.Capital c_c
+      LEFT JOIN c_c.CapitalOfTheCountry c_c_cotc
+
+
 ## 5.3. <a id="h5_3">Execute task</a>
 
 ### 5.3.1 <a id="h5_3_1">Usage</a>
 
-    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--minified] [--uninstall] [--generator-class="..."] [--no-confirmation]
+    symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--minified] [--uninstall] [--generator-class="..."] [--no-confirmation] [name1] ... [nameN]
 
   For full task details, please refer to the task help block:
 
@@ -144,29 +221,29 @@ template by extending it.
 
 ### 5.3.3 <a id="h5_3_3">Customize JOIN's deepness</a>
 
-  By default JOINs deepness is 3 (superfluously enough), but you can adjust it by passing flag ``--depth``:
+  By default JOINs deepness is 3 (superfluously enough), but you can adjust it
+  by passing flag ``--depth``:
 
     ./symfony doctrine:build-table --depth=4
 
 ### 5.3.4 <a id="h5_3_4">Optimize tables for production</a>
 
   When you deploy your code to production you need to minimize generated base
-  table class file size by passing flag ``--minified`` (e.i. base tables without @method hints):
+  table class file size by passing flag ``--minified`` (e.i. base tables without
+  @method hints):
 
     ./symfony doctrine:build-table --env=prod --minified
 
-  And **remember** to enable APC! Without it, this will work pretty slowly. And sure, cache is working right!
+  And **remember** to enable APC! Without it, this will work pretty slowly.
+  And sure, cache is working right!
 
-  Check for ``apc.num_files_hint`` is greater than yours project's PHP file count:
-
+    # Check for ``apc.num_files_hint`` is greater than yours project's PHP file count:
     find ./ -type f -name "*.php" | wc -l
 
-  Check for ``apc.max_file_size`` is greater than your project's worst PHP file:
-
+    # Check for ``apc.max_file_size`` is greater than your project's worst PHP file:
     find ./ -type f -name "*.php" -size +1M
 
-  Check for ``apc.shm_size`` is greater than all PHP files size:
-
+    # Check for ``apc.shm_size`` is greater than all PHP files size:
     find ./ -type f -name "*.php" -ls | awk '{total += $7} END {print total}'
 
 ## 5.4. <a id="h5_4">Turning off base table generation for specific models</a>
@@ -190,13 +267,26 @@ template by extending it.
   There are some nuances to know. When you disable model(-s), which base table(-s) was generated before,
   task ``doctrine:build-table`` will uninstall disabled base table automatically.
 
+## 5.5. <a id="h5_5">Base tables generation for a specific models</a>
+
+  Now you can pass manually a list of models you would like to generate base tables
+  (NOTE: table generation should not be turned off - see
+  <a href="#h5_4">Turning off base table generation for specific models</a> for
+  more information)
+
+    ./symfony doctrine:build-table City Country
+
+  The same principle to uninstall a specific models:
+
+    ./symfony doctrine:build-table --uninstall City Country
+
 # 6. <a id="how">How it works</a>
 
   All is very tricky. Each available method for code-completion does not contains code at all.
   That is - no extra code, smallest file size. Things are done by implementing ``PHPDoc`` directive @method.
 
-  Here is code sample of generated base table for model Post - file ``BasePostTable.class.php``
-  preview on [http://pastie.org/private/wh5wn0ntvfkuoizjwka](http://pastie.org/private/wh5wn0ntvfkuoizjwka "Preview")
+  Here is code sample of generated base table for model City - file ``BaseCityTable.class.php``
+  preview on [http://pastie.org/private/qhlsjqlxxzohe0r0jfpew](http://pastie.org/private/qhlsjqlxxzohe0r0jfpew "Preview")
 
   As you could observe, additionally PHPDoc contains ``@c`` directives:
 
@@ -321,4 +411,4 @@ before existing one.
     [sfDoctrineTable] functional/backend/MethodExistanceTest.............ok
     [sfDoctrineTable] functional/backend/MethodWhereTest.................ok
      All tests successful.
-     Files=3, Tests=102
+     Files=3, Tests=105

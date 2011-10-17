@@ -38,22 +38,13 @@
      */
     protected $modelName = null;
 
-    protected $modelBuilder = '';
-
     protected $methodDocs = array();
 
     protected $callableDocs = array();
 
-    protected $modelLevels = 0;
-
-    protected $modelAliases = array();
-
-    protected $build = array();
-
     protected $generateCustomPHPDoc = array();
 
-
-    public $params = array();
+    protected $params = array();
 
     /**
      * @var Doctrine_Table
@@ -100,12 +91,15 @@
           'depth'     => 2,
           'uninstall' => false,
           'minified'  => false,
+          'models'    => array(),
         ),
         $params
       );
 
-      // create a form class for every Doctrine class
-      foreach ($this->loadModels() as $model)
+      $models = $this->params['models'] ?: $this->loadModels();
+
+      # create a form class for every Doctrine class
+      foreach ($models as $model)
       {
         $this->modelName  = $model;
         $this->table      = Doctrine_Core::getTable($this->modelName);
@@ -196,7 +190,7 @@
     }
 
     /**
-     * Check to see if a model is part of a plugin
+     * Checks for a model is a part of plugin
      *
      * @param string $modelName
      *
@@ -212,7 +206,7 @@
      *
      * @param string $modelName
      *
-     * @return string Plugin name
+     * @return string|bool Plugin name
      */
     public function getPluginNameForModel($modelName)
     {
@@ -282,6 +276,11 @@
       return $models;
     }
 
+    /**
+     * Looks for base table generation is enabled/disabled
+     *
+     * @return bool
+     */
     protected function isTableGenerationDisabled ()
     {
       $symfonyOptions = (array) $this->table->getOption('symfony');
@@ -360,6 +359,12 @@
       return sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class');
     }
 
+    /**
+     * Transforms array to a line representation
+     *
+     * @param array $params Assoc array of parameters
+     * @return string
+     */
     protected function inline ($params)
     {
       $string = '';
@@ -372,19 +377,26 @@
       return $string;
     }
 
-    protected function buildRelationPhpdocs ($model, $depth, $viaModel = '', $aliasFrom = '^', $alias = '')
+    /**
+     * Recursively creates JOINs methods based on model relations hierarchy
+     *
+     * @param string  $model        Model name to look for relations
+     * @param int     $depth        Current depth (from greates to lowest)
+     * @param string  $viaModel     Part of method name of join path
+     * @param array   $builtJoins   List of already built joins - used for
+     *                              escape from cicles and duplicates
+     * @param string  $aliasFrom    Alias of model name to create joins from
+     * @param string  $alias        New joined model alias name
+     *
+     * @return null
+     */
+    protected function buildRelationPhpdocs ($model, $depth, $viaModel = '', array $builtJoins = array(), $aliasFrom = '^', $alias = '')
     {
       $viaModelMethodPart = '';
 
       if (! empty($viaModel))
       {
         $viaModelMethodPart = sprintf('Via%s', $viaModel);
-      }
-      else
-      {
-        $this->modelBuilder = $model;
-        $this->modelLevels = $depth;
-        $this->build = array();
       }
 
       if (! empty($alias))
@@ -469,7 +481,7 @@
         elseif (
             ! $relation->isOneToOne()
           &&
-            ($this->modelLevels == $depth)
+            ('^' == $aliasFrom)
           &&
             null == $relation->offsetGet('refTable')
         )
@@ -560,8 +572,24 @@
           'joinType'      => 'INNER',
         );
 
-        # do not generate a ciclic joins
-        if ($this->modelBuilder === $relation->getClass())
+        $localKey = "{$model}-{$relation->getLocal()}";
+        $foreignKey = "{$relation->getClass()}-{$relation->getForeign()}";
+
+        # check new relation was never used before
+        # relation could be from any direction (forwards or backwards entering)
+        if (
+           (
+              isset($builtJoins[$localKey])
+            &&
+              $builtJoins[$localKey] == $foreignKey
+           )
+         ||
+           (
+              isset($builtJoins[$foreignKey])
+            &&
+              $builtJoins[$foreignKey] == $localKey
+           )
+        )
         {
           continue;
         }
@@ -582,6 +610,7 @@
             empty($viaModel)
               ? $methodPart
               : sprintf('%sAnd%s', $viaModel, $methodPart),
+            array_merge($builtJoins, array($localKey => $foreignKey)),
             $aliasOn,
             $aliasOn
           );

@@ -19,6 +19,9 @@
   $task->run(array(), array('depth' => 3, 'no-confirmation' => true, 'env' => 'test'));
 
   $cultureTable = CultureTable::getInstance();
+  $cityTable = CityTable::getInstance();
+  $postTable = PostTable::getInstance();
+  $sfGuardUser = sfGuardUserTable::getInstance();
 
   $tests = array(
     array(
@@ -26,35 +29,35 @@
       'methods' => array(
         array(
           'method' => 'withInnerJoinOnUserViaSfGuardUserGroup',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($sfGuardUser->createQuery()),
         ),
         array(
           'method' => 'withInnerJoinOnSfGuardGroupPermissionViaSfGuardUserPermissionAndPermission',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($sfGuardUser->createQuery()),
         ),
         array(
           'method' => 'withLeftJoinOnSfGuardGroupPermissionViaPermissions',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($sfGuardUser->createQuery()),
         ),
         array(
           'method' => 'withInnerJoinOnGroupViaGroupsAndSfGuardGroupPermission',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($sfGuardUser->createQuery()),
         ),
         array(
           'method' => 'orWhereSaltIn',
-          'args' => array($cultureTable->createQuery(), array('md5', 'sha1')),
+          'args' => array($sfGuardUser->createQuery(), array('md5', 'sha1')),
         ),
         array(
           'method' => 'andWhereSaltIn',
-          'args' => array($cultureTable->createQuery(), array('md5', 'sha1')),
+          'args' => array($sfGuardUser->createQuery(), array('md5', 'sha1')),
         ),
         array(
           'method' => 'andWhereSalt',
-          'args' => array($cultureTable->createQuery(), 'md5'),
+          'args' => array($sfGuardUser->createQuery(), 'md5'),
         ),
         array(
           'method' => 'orWhereSalt',
-          'args' => array($cultureTable->createQuery(), 'sha1'),
+          'args' => array($sfGuardUser->createQuery(), 'sha1'),
         ),
       ),
     ),
@@ -63,19 +66,19 @@
       'methods' => array(
         array(
           'method' => 'addSelectChildPostsCountAsJoin',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($postTable->createQuery()),
         ),
         array(
           'method' => 'addSelectChildPostsCountAsSubSelect',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($postTable->createQuery()),
         ),
         array(
           'method' => 'addSelectImagesCountAsJoin',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($postTable->createQuery()),
         ),
         array(
           'method' => 'addSelectImagesCountAsSubSelect',
-          'args' => array($cultureTable->createQuery()),
+          'args' => array($postTable->createQuery()),
         ),
       ),
     ),
@@ -136,6 +139,23 @@
         ),
       ),
     ),
+    array(
+      'model' => 'City',
+      'methods' => array(
+        array(
+          'method' => 'withInnerJoinOnCountry',
+          'args' => array($cityTable->createQuery()),
+        ),
+        array(
+          'method' => 'withLeftJoinOnCapitalViaCountry',
+          'args' => array($cityTable->createQuery()),
+        ),
+        array(
+          'method' => 'withLeftJoinOnCapitalOfTheCountryViaCountryAndCapital',
+          'args' => array($cityTable->createQuery()),
+        ),
+      ),
+    ),
   );
 
 
@@ -145,7 +165,7 @@
 
     $t->diag(sprintf('Checking method existance for model "%s"', $modelName));
 
-    $cultureTable = Doctrine::getTable($modelName);
+    $table = Doctrine::getTable($modelName);
 
     foreach ($methods as $methodVariables)
     {
@@ -153,7 +173,7 @@
 
       try
       {
-        call_user_func_array(array($cultureTable, $method), $args);
+        call_user_func_array(array($table, $method), $args);
 
         $t->pass(sprintf('Method "%s" exists', $method));
       }

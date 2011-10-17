@@ -1,8 +1,4 @@
 detect_relations: false
-options:
-  type: InnoDB
-  collation: utf8_general_ci
-  charset: utf8
 
 PostMedia:
   actAs:
@@ -19,7 +15,3 @@ PostMedia:
       type: integer(4)
       unsigned: true
       notnull: true
-#  relations:
-#    Post:
-#      onDelete: CASCADE
-#      onUpdate: CASCADE
