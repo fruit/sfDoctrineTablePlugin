@@ -460,7 +460,6 @@
 
       /* @var $relation Doctrine_Relation */
       $table = Doctrine_Core::getTable($model);
-      print $model . "\n";
 
       $relations = $table->getRelations();
 
