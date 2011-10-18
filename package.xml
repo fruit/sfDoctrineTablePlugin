@@ -22,8 +22,8 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date></date>
-  <time></time>
+  <date>2011-10-18</date>
+  <time>21:00:00</time>
   <version>
     <release>1.0.0</release>
     <api>1.0.0</api>
@@ -43,7 +43,7 @@
         <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="5db32b5f5bd84cd6a7f4dff131e4384c" role="data" />
       </dir>
       <file name="LICENSE" md5sum="be8ae084e78f9340892a3acd5b41a249" role="data" />
-      <file name="README" md5sum="a2d6812d7f3bbc6ed3bae9fbf8874f4d" role="data" />
+      <file name="README" md5sum="ce6a3190378071496313a6f8e7272d09" role="data" />
       <dir name="lib">
         <dir name="generator">
           <file name="sfDoctrineTableGenerator.class.php" md5sum="3692f33e54354e11b507b25e4595d908" role="data" />
@@ -100,7 +100,7 @@
         <release>stable</release>
         <api>stable</api>
       </stability>
-      <date></date>
+      <date>2011-10-18</date>
       <license uri="http://www.symfony-project.com/license">MIT</license>
       <notes>
         * First release
