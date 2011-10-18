@@ -11,7 +11,7 @@ users only (prefect implementation in [NetBeans 7.1](http://netbeans.org/downloa
  1. <a href="#desc">Description</a>
  1. <a href="#screenshot">Screenshots</a>
  1. <a href="#install">Installation</a>
- 1. <a href="#uninstall">Uninstalling</a>
+ 1. <a href="#uninstall">Uninstallation</a>
  1. <a href="#setup">Setup</a>
    1. <a href="#h5_1">Check plugin is enabled</a>
    1. <a href="#h5_2">Configure</a>
@@ -31,8 +31,8 @@ users only (prefect implementation in [NetBeans 7.1](http://netbeans.org/downloa
 
 # 1. <a id="desc">Description</a>
 
-Plugin helps you to skip routine job by writing left/inner joins on related
-tables. It gives you ability to use pre-generated methods with IDE code-completion
+Plugin helps you not to remember tables relation aliases and escape from the constructing left and/or inner joins.
+It gives you ability to use pre-generated methods with IDE code-completion
 to speed-up your coding. Also, you could add your owns methods to the generator's
 template by extending it.
 
@@ -68,19 +68,19 @@ template by extending it.
             $ git pull origin master
             $ cd ../..
 
-# 4. <a id="uninstall">Uninstalling</a>
+# 4. <a id="uninstall">Uninstallation</a>
 
-  Unusual uninstalling process! First of all you should rollback your base table
+  Unusual uninstallation process! First of all you should rollback your base table
   class inheritance and remove generated base table classes for models. All that
   you can make by executing:
 
     ./symfony doctrine:build-table --uninstall
 
-  In case, you had your own ``Doctrine_Table`` class
-  (e.g. ``Doctrine_Table_Advanced``), you need replace inherited
-  class from ``Doctrine_Table_Scoped`` back to ``Doctrine_Table_Advanced``.
+  In case, you have your own ``Doctrine_Table`` class
+  (e.g. ``Doctrine_Table_Advanced``), you need to replace inherited
+  class ``Doctrine_Table_Scoped`` with ``Doctrine_Table_Advanced``.
 
-  And after, usual uninstalling process:
+  Then usual uninstallation process:
 
     ./symfony plugin:uninstall sfDoctrineTablePlugin
 
@@ -144,8 +144,8 @@ template by extending it.
 
   According to my own experience, the most profit you will get in case you disable
   automatic relation detection (``detect_relations: false``) and setup only important
-  to you relations by hand. Advantages to this solutions is sweet generated method
-  names and its small file size on disk (APC will be thankful to you).
+  to you relations by hand. Advantages to the solutions are clear generated method
+  names and small file size (APC will be thankful to you).
 
   Here is small ``schema.yml`` example:
 
@@ -207,7 +207,7 @@ template by extending it.
 
 ### 5.3.1 <a id="h5_3_1">Usage</a>
 
-    symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--minified] [--uninstall] [--generator-class="..."] [--no-confirmation] [name1] ... [nameN]
+    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--minified] [--uninstall] [--generator-class="..."] [--no-confirmation] [name1] ... [nameN]
 
   For full task details, please refer to the task help block:
 
@@ -234,8 +234,7 @@ template by extending it.
 
     ./symfony doctrine:build-table --env=prod --minified
 
-  And **remember** to enable APC! Without it, this will work pretty slowly.
-  And sure, cache is working right!
+  **Remember** to enable APC and be sure, cache is working right!
 
     # Check for ``apc.num_files_hint`` is greater than yours project's PHP file count:
     find ./ -type f -name "*.php" | wc -l
@@ -334,10 +333,8 @@ before existing one.
   All relations starts with "C", this mean that joined Company table maps to "c"
   and Category maps to the "ca" (due to "c" is used).
 
-  After some database refactorings, relation "Company" was removed. And you have
-  re-built your models and base tables again.
-
-  Now, when you update below above code by removing all things related to Company:
+  You have made a database refactoring and relation "Company" was removed.
+  Next step is to fix the query given above by removing all things related to a "Company":
 
     [php]
 
@@ -348,7 +345,7 @@ before existing one.
 
     $q->select('a.*, ca.slug')->execute();
 
-  Code will be still invalid, due to new generated alias for table Category now maps to the "c".
+  Code will be still erroneous, because the new generated alias for table Category maps to the letter "c".
   So, to fix code sample, you need to replace "ca.slug" with "c.slug".
 
     [php]
@@ -365,30 +362,30 @@ before existing one.
   Here is time cost to initialize new table instance (e.g. ``Doctrine::getTable('MyTable')``)
   with generated base table and without.
   As you could notice, this it pretty large table with 26 relations and 19 columns.
-  It demonstrates that even big table load time is slower than 0.00142 ms comparing
+  It demonstrates that even big table load time is slower than 0.00142 s. comparing
   to a default initialization time.
 
   All the more so it's just first time you initialize any table, all following
-  table initializations will be comparatively slower than 0.0001 ms
+  table initializations will be comparatively slower than 0.0001 s.
 
     +----------------------------------------------------------------------+
     |              Time required to initialize table instance              |
     +----------+--------+--------+---------------+-------------+-----------+
     | Relation | Column | Depth  |    Default    | With plugin | Slower on |
-    |   count  |  count | level  |     (ms)      |     (ms)    |   (ms)    |
+    |   count  |  count | level  |      (s)      |     (s)     |    (s)    |
     +----------+--------+--------+---------------+-------------+-----------+
     |    26    |   19   |   3    |       0.01411 |     0.01553 |   0.00142 |
     +----------+--------+--------+---------------+-------------+-----------+
 
   Given below table demonstrates how many time is spent to analyze PHPDoc.
-  Referencing to table data, generated base table will add additionally ~ 0.0003 ms
+  Referencing to table data, generated base table will add additionally ~ 0.0003 s.
   to each magic method call.
 
     +-------------------------------------------------------------------------+
     |          Time required to add new Doctrine Query parts                  |
     +----------------------+------------+-----------+-------------+-----------+
     |        Method        |   Method   |  Default  | With plugin | Slower on |
-    |         name         | complexity |   (ms)    |    (ms)     |    (ms)   |
+    |         name         | complexity |    (s)    |     (s)     |    (s)    |
     +----------------------+------------+-----------+-------------+-----------+
     |      orWhereId       |    low     |   0.00003 |     0.00035 |   0.00032 |
     +----------------------+------------+-----------+-------------+-----------+
@@ -398,7 +395,7 @@ before existing one.
   Things to remember:
 
   * Minified classes uses less space on disk, but does not affects the table initialization time.
-  * Depth level with enabled APC does not affects the table initialization time (difference less than 0.001s).
+  * Depth level with enabled APC does not affects the table initialization time (difference less than 0.001 s.).
   * The more generation depth, table relations and columns count, the more file size.
 
 # 9. <a id="tdd">TDD</a>
