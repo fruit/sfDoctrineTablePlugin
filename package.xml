@@ -8,13 +8,13 @@
   xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
   <name>sfDoctrineTablePlugin</name>
   <channel>pear.symfony-project.com</channel>
-  <summary></summary>
+  <summary>Custom base tables for Symfony models</summary>
   <description>
-    The ``sfDoctrineTablePlugin`` generates feature packed base tables to each model.
-Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT``
-and ``JOIN`` considering table relations and its depth. List of new available
-methods are accessed through the PHPDoc tag @method and are suitable for IDE
-users only.
+    The sfDoctrineTablePlugin generates feature packed base tables to each model.
+    Base table contains PHPDocs of available pre-generated WHERE, COUNT
+    and JOIN considering table relations and its depth. List of new available
+    methods are accessed through the PHPDoc tag @method and are suitable for IDE
+    users only.
   </description>
   <lead>
     <name>Ilya Sabelnikov</name>
@@ -29,15 +29,48 @@ users only.
     <api>1.0.0</api>
   </version>
   <stability>
-    <release>alpha</release>
-    <api>alpha</api>
+    <release>stable</release>
+    <api>stable</api>
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-
+    * First release
   </notes>
   <contents>
-    <dir name="/"></dir>
+    <dir name="/">
+      <dir name="config">
+        <file name="app.yml" md5sum="972b0b8c2f1d44030167c393979546f5" role="data" />
+        <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="5db32b5f5bd84cd6a7f4dff131e4384c" role="data" />
+      </dir>
+      <file name="LICENSE" md5sum="be8ae084e78f9340892a3acd5b41a249" role="data" />
+      <file name="README" md5sum="a2d6812d7f3bbc6ed3bae9fbf8874f4d" role="data" />
+      <dir name="lib">
+        <dir name="generator">
+          <file name="sfDoctrineTableGenerator.class.php" md5sum="3692f33e54354e11b507b25e4595d908" role="data" />
+        </dir>
+        <dir name="vendor">
+          <dir name="Doctrine">
+            <dir name="Table">
+              <file name="Scoped.php" md5sum="69b54a782449695669a5dbfb8d49afbc" role="data" />
+            </dir>
+          </dir>
+        </dir>
+        <dir name="task">
+          <file name="sfDoctrineBuildTableTask.class.php" md5sum="a9f736f228aa6d84a73eff1fbfa152e9" role="data" />
+        </dir>
+      </dir>
+      <dir name="data">
+        <dir name="generator">
+          <dir name="sfDoctrineTable">
+            <dir name="default">
+              <dir name="template">
+                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="a867edf111740862fac335017fa72e3d" role="data" />
+              </dir>
+            </dir>
+          </dir>
+        </dir>
+      </dir>
+    </dir>
   </contents>
   <dependencies>
     <required>
@@ -64,13 +97,13 @@ users only.
         <api>1.0.0</api>
       </version>
       <stability>
-        <release>alpha</release>
-        <api>alpha</api>
+        <release>stable</release>
+        <api>stable</api>
       </stability>
       <date></date>
       <license uri="http://www.symfony-project.com/license">MIT</license>
       <notes>
-
+        * First release
       </notes>
     </release>
   </changelog>
