@@ -23,9 +23,9 @@
     <active>yes</active>
   </lead>
   <date>2011-10-18</date>
-  <time>21:28:00</time>
+  <time>22:20:00</time>
   <version>
-    <release>1.0.1</release>
+    <release>1.0.2</release>
     <api>1.0.0</api>
   </version>
   <stability>
@@ -34,7 +34,7 @@
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-    * Removed debug output
+    * [Fixed] Invalid extends class when uninstalling model with "concrete" inheritance (GH-1)
   </notes>
   <contents>
     <dir name="/">
@@ -43,10 +43,10 @@
         <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="5db32b5f5bd84cd6a7f4dff131e4384c" role="data" />
       </dir>
       <file name="LICENSE" md5sum="be8ae084e78f9340892a3acd5b41a249" role="data" />
-      <file name="README" md5sum="ce6a3190378071496313a6f8e7272d09" role="data" />
+      <file name="README" md5sum="9718d1e1d288c871d2651de45d4730cc" role="data" />
       <dir name="lib">
         <dir name="generator">
-          <file name="sfDoctrineTableGenerator.class.php" md5sum="4d1891f645161900a65115c4501019d0" role="data" />
+          <file name="sfDoctrineTableGenerator.class.php" md5sum="841dba3ba88a609c2febb91a979f0f93" role="data" />
         </dir>
         <dir name="vendor">
           <dir name="Doctrine">
@@ -91,6 +91,21 @@
   </dependencies>
   <phprelease />
   <changelog>
+    <release>
+      <version>
+        <release>1.0.2</release>
+        <api>1.0.0</api>
+      </version>
+      <stability>
+        <release>stable</release>
+        <api>stable</api>
+      </stability>
+      <date>2011-10-18</date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+        * [Fixed] Invalid extends class when uninstalling model with "concrete" inheritance (GH-1)
+      </notes>
+    </release>
     <release>
       <version>
         <release>1.0.1</release>

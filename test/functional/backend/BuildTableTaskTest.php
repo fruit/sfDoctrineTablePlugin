@@ -49,6 +49,13 @@
     }
   }
 
+  $t->ok(
+    preg_match(
+      "/class\sPostMediaImageTable\sextends\sPostMediaTable/",
+      file_get_contents("{$libDir}/PostMediaImageTable.class.php")
+    ),
+    'Class "PostMediaImageTable" has correct extend class "PostMediaTable"'
+  );
 
   /**
    * application, env, depth, minified, uninstall, generator-class, no-confirmation
@@ -68,6 +75,7 @@
       'Post' => true,
       'Section' => true,
       'Culture' => true,
+      'PostMediaImage' => true,
     ),
   );
 

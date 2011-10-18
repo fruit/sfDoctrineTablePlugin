@@ -408,4 +408,4 @@ before existing one.
     [sfDoctrineTable] functional/backend/MethodExistanceTest.............ok
     [sfDoctrineTable] functional/backend/MethodWhereTest.................ok
      All tests successful.
-     Files=3, Tests=105
+     Files=3, Tests=113

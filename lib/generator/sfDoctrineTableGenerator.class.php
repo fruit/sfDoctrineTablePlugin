@@ -802,6 +802,15 @@
           return;
         }
 
+        if (null === ($parentInheritedModelName = $this->getParentModel()))
+        {
+          $inheritanceClass = 'Doctrine_Table';
+        }
+        else
+        {
+          $inheritanceClass = "{$parentInheritedModelName}Table";
+        }
+
         $tableContent = file_get_contents($tableLocation);
 
         $count = null;
@@ -813,7 +822,7 @@
          */
         $tableContent = preg_replace(
           "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
-          "class\\1{$this->modelName}Table\\2extends\\3Doctrine_Table",
+          "class\\1{$this->modelName}Table\\2extends\\3{$inheritanceClass}",
           $tableContent, 1, $count
         );
 
@@ -840,6 +849,16 @@
 
         if (is_file($pluginTableLocation))
         {
+          if (null === ($parentInheritedModelName = $this->getParentModel()))
+          {
+            $inheritanceClass = 'Doctrine_Table';
+          }
+          else
+          {
+            $inheritanceClass = "{$this->builderOptions['packagesPrefix']}{$parentInheritedModelName}Table";
+          }
+
+
           $customTableClass = sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class');
 
           $pluginTableContent = file_get_contents($pluginTableLocation);
@@ -848,7 +867,7 @@
 
           $pluginTableContent = preg_replace(
             "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+){$customTableClass}/ms",
-            "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3Doctrine_Table",
+            "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$inheritanceClass}",
             $pluginTableContent, 1, $count
           );
 
