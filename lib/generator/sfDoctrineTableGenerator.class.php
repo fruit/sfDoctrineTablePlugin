@@ -34,22 +34,46 @@
     protected $pluginModels = array();
 
     /**
+     * Current model name
+     *
      * @var string
      */
     protected $modelName = null;
 
-    protected $methodDocs = array();
-
-    protected $callableDocs = array();
-
-    protected $generateCustomPHPDoc = array();
-
-    protected $params = array();
-
     /**
+     * Current table instance
+     *
      * @var Doctrine_Table
      */
     protected $table = null;
+
+    /**
+     * List of methods that should appeared in generated base table
+     *
+     * @var array
+     */
+    protected $methodDocs = array();
+
+    /**
+     * List of inline @c attributes that holds callable method metadata
+     *
+     * @var array
+     */
+    protected $callableDocs = array();
+
+    /**
+     * List of methods that is generated based on pattern (e.g. "andWhere%sIn")
+     *
+     * @var array
+     */
+    protected $generateCustomPHPDoc = array();
+
+    /**
+     * Params passed to the generator
+     *
+     * @var array
+     */
+    protected $params = array();
 
     /**
      * Initializes the current sfGenerator instance.
@@ -63,9 +87,23 @@
       $this->getPluginModels();
       $this->setGeneratorClass('sfDoctrineTable');
 
-      $this->builderOptions = $this->getDoctrinePluginConfiguration()->getModelBuilderOptions();
+      $this->builderOptions = $this
+        ->getDoctrinePluginConfiguration()
+        ->getModelBuilderOptions()
+      ;
 
-      $this->pluginPaths = $this->generatorManager->getConfiguration()->getAllPluginPaths();
+      $this->pluginPaths = $this
+        ->getConfiguration()
+        ->getAllPluginPaths()
+      ;
+    }
+
+    /**
+     * @return sfApplicationConfiguration
+     */
+    protected function getConfiguration()
+    {
+      return $this->generatorManager->getConfiguration();
     }
 
     /**
@@ -74,7 +112,10 @@
      */
     protected function getDoctrinePluginConfiguration ()
     {
-      return $this->generatorManager->getConfiguration()->getPluginConfiguration('sfDoctrinePlugin');
+      return $this
+        ->getConfiguration()
+        ->getPluginConfiguration('sfDoctrinePlugin')
+      ;
     }
 
     /**
@@ -84,7 +125,7 @@
      *
      * @return string The data to put in configuration cache
      */
-    public function generate($params = array())
+    public function generate ($params = array())
     {
       $this->params = array_merge(
         array(
@@ -103,13 +144,11 @@
       {
         $this->modelName  = $model;
         $this->table      = Doctrine_Core::getTable($this->modelName);
-        $this->tableName  = $this->table->getTableName();
 
         $this->generateCustomPHPDoc = array();
 
         if ($this->params['uninstall'] || $this->isTableGenerationDisabled())
         {
-          #print "Model {$model} table generation is disabled\n";
           $this->uninstallTable();
 
           continue;
@@ -125,7 +164,9 @@
           $baseDir .= '/' . $pluginName;
         }
 
-        $baseTableLocation = "{$baseDir}/{$this->builderOptions['baseClassesDirectory']}/Base{$this->modelName}Table{$this->builderOptions['suffix']}";
+        $baseTableLocation
+          = "{$baseDir}/{$this->builderOptions['baseClassesDirectory']}/" .
+            "Base{$this->modelName}Table{$this->builderOptions['suffix']}";
 
 
         $this->methodDocs = array();
@@ -148,8 +189,8 @@
     {
       if (! $this->pluginModels)
       {
-        $plugins     = $this->generatorManager->getConfiguration()->getPlugins();
-        $pluginPaths = $this->generatorManager->getConfiguration()->getAllPluginPaths();
+        $plugins     = $this->getConfiguration()->getPlugins();
+        $pluginPaths = $this->getConfiguration()->getAllPluginPaths();
 
         foreach ($pluginPaths as $pluginName => $path)
         {
@@ -158,7 +199,12 @@
             continue;
           }
 
-          foreach (sfFinder::type('file')->name('*.php')->in($path.'/lib/model/doctrine') as $path)
+          $files = sfFinder::type('file')
+            ->name('*.php')
+            ->in("{$path}/lib/model/doctrine")
+          ;
+
+          foreach ($files as $path)
           {
             $info = pathinfo($path);
             $e = explode('.', $info['filename']);
@@ -174,10 +220,12 @@
 
                 if ($reflection->isInstantiable())
                 {
-                  $generators = Doctrine_Core::getTable($modelName)->getGenerators();
+                  $generators
+                    = Doctrine_Core::getTable($modelName)->getGenerators();
                   foreach ($generators as $generator)
                   {
-                    $this->pluginModels[$generator->getOption('className')] = $pluginName;
+                    $this->pluginModels[$generator->getOption('className')]
+                      = $pluginName;
                   }
                 }
               }
@@ -226,7 +274,9 @@
     public function getColumns()
     {
       $parentModel = $this->getParentModel();
-      $parentColumns = $parentModel ? array_keys(Doctrine_Core::getTable($parentModel)->getColumns()) : array();
+      $parentColumns = $parentModel
+        ? array_keys(Doctrine_Core::getTable($parentModel)->getColumns())
+        : array();
 
       $columns = array();
       foreach (array_diff(array_keys($this->table->getColumns()), $parentColumns) as $name)
@@ -244,7 +294,7 @@
      */
     protected function loadModels()
     {
-      Doctrine_Core::loadModels($this->generatorManager->getConfiguration()->getModelDirs());
+      Doctrine_Core::loadModels($this->getConfiguration()->getModelDirs());
       $models = Doctrine_Core::getLoadedModels();
       $models =  Doctrine_Core::initializeModels($models);
       $models = Doctrine_Core::filterInvalidModels($models);
@@ -390,7 +440,9 @@
      *
      * @return null
      */
-    protected function buildRelationPhpdocs ($model, $depth, $viaModel = '', array $builtJoins = array(), $aliasFrom = '^', $alias = '')
+    protected function buildRelationPhpdocs (
+      $model, $depth, $viaModel = '', $builtJoins = array(), $aliasFrom = '^', $alias = ''
+    )
     {
       $viaModelMethodPart = '';
 
@@ -407,8 +459,8 @@
       $levelAliases = array();
 
       /* @var $relation Doctrine_Relation */
-
       $table = Doctrine_Core::getTable($model);
+      print $model . "\n";
 
       $relations = $table->getRelations();
 
@@ -416,25 +468,25 @@
       {
         $methodPart = sfInflector::camelize($relation->getAlias());
 
-        $firstChars = 1;
+        $position = 1;
 
         /**
          * do not dublicate alias inside joins
          */
         do
         {
-          $relationName = ucfirst($relation->getAlias());
+          $tmpName = ucfirst($relation->getAlias());
 
-          $relationName[$firstChars - 1] = strtoupper($relationName[$firstChars - 1]);
+          $tmpName[$position - 1] = strtoupper($tmpName[$position - 1]);
 
           if (! $relation->isOneToOne() && $relationAlias != 'Translation')
           {
-            $relationName .= 'S';
+            $tmpName .= 'S';
           }
 
-          $aliasOn = $alias . strtolower(preg_replace('/[a-z]/', '', $relationName));
+          $aliasOn = $alias . strtolower(preg_replace('/[a-z]/', '', $tmpName));
 
-          $firstChars ++;
+          $position ++;
         }
         while (array_key_exists($aliasOn, $levelAliases));
 
@@ -594,8 +646,9 @@
           continue;
         }
 
-        # do not generate joins further than Translation table
-        if ('Translation' == $relationName)
+        # do not generate joins further if that is non-physical table
+        # (e.g. Translation)
+        if ($relation->getTable()->isGenerator())
         {
           continue;
         }
@@ -663,6 +716,11 @@
       );
     }
 
+    /**
+     * List of methods and its parameters that was generated based on pattern
+     *
+     * @return array
+     */
     public function getCallableDocs ()
     {
       $result = array();
@@ -675,6 +733,12 @@
       return $result;
     }
 
+    /**
+     * List of generated methods by category
+     *
+     * @param string $category
+     * @return array
+     */
     public function getPHPDocByCategory ($category)
     {
       if (! isset($this->methodDocs[$category]))
@@ -695,21 +759,33 @@
       return $this->methodDocs[$category];
     }
 
+    /**
+     * Current project Doctrine_Collection class (may be extended)
+     *
+     * @return string
+     */
     public function getCollectionClass ()
     {
       return Doctrine_Manager::getInstance()->getAttribute(Doctrine::ATTR_COLLECTION_CLASS);
     }
 
+    /**
+     * Whether generator is configured with parameter "minified"
+     *
+     * @return bool
+     */
     public function isMinified ()
     {
       return isset($this->params['minified']) && $this->params['minified'];
     }
 
+    /**
+     * Process base table uninstallation
+     *
+     * @return null
+     */
     protected function uninstallTable ()
     {
-      /**
-       * @todo when package is set
-       */
       $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
 
       if (! $this->isPluginModel($this->modelName))
@@ -724,7 +800,6 @@
 
         if (! is_file($tableLocation))
         {
-          #print "File {$tableLocation} does not exists";
           return;
         }
 
@@ -733,8 +808,9 @@
         $count = null;
 
         /**
-         * @todo What if previous "extends" class was not Doctrine_Table?
-         * (could be in the real world)
+         * If previously "extends" class was not Doctrine_Table?
+         * Leave Doctrine_Table, in README is described uninstallation process
+         * (build-models should be executed)
          */
         $tableContent = preg_replace(
           "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
@@ -744,8 +820,6 @@
 
         if ($count)
         {
-          #print sprintf("Restoring previos %sTable extends clause.\n", $this->modelName);
-
           file_put_contents($tableLocation, $tableContent);
         }
       }
@@ -781,14 +855,8 @@
 
           if ($count)
           {
-            #print sprintf("Restoring previos %sTable extends clause. (PACKAGE/plugin table)\n", $this->modelName);
-
             file_put_contents($pluginTableLocation, $pluginTableContent);
           }
-        }
-        else
-        {
-          #print "file {$pluginTableLocation} not found\n";
         }
 
         /**
@@ -804,10 +872,6 @@
         {
           $count = null;
 
-          /**
-           * @todo What if previous "extends" class was not Doctrine_Table?
-           * (could be in the real world)
-           */
           $defaultTableContent = preg_replace(
             "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
             "class\\1{$this->modelName}Table\\2extends\\3{$this->builderOptions['packagesPrefix']}{$this->modelName}Table",
@@ -816,16 +880,9 @@
 
           if ($count)
           {
-            #print "Restoring previos {$this->modelName}Table extends clause. (PACKAGE/default table)\n";
-
             file_put_contents($defaultTableLocation, $defaultTableContent);
           }
         }
-        else
-        {
-          #print "file not found {$defaultTableLocation}\n";
-        }
-
       }
 
       /**
@@ -845,12 +902,15 @@
 
       if (is_file($baseTableLocation))
       {
-        #print "Removing previosly created base table class for model {$this->modelName}.\n";
-
         unlink($baseTableLocation);
       }
     }
 
+    /**
+     * Process base table installation
+     *
+     * @return null
+     */
     protected function installTable ()
     {
       $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
@@ -858,7 +918,7 @@
       if (! $this->isPluginModel($this->modelName))
       {
         /**
-         * @todo There is only 1 file we should change
+         * There is only 1 file we should change
          *
          *  1. lib/model/doctrine/%model_name%Table.class.php
          */
@@ -893,11 +953,6 @@
               "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
               $tableClassContent, 1, $count
             );
-
-            if (! $count)
-            {
-              #print sprintf("Something happened wrong in %s (NON-PACKAGE class)\n", $tableLocation);
-            }
           }
 
           file_put_contents($tableLocation, $tableClassContent);
@@ -906,7 +961,7 @@
       else
       {
         /**
-         * @todo There are 2 files we need to update
+         * There are 2 files we need to update
          *
          * 1. plugins/%plugin_name%/lib/model/doctrine/plugin/Plugin%model_name%Table.class.php
          * 2. lib/model/doctrine/%model_name%Table.class.php
@@ -937,6 +992,7 @@
            */
 
           $defaultTableClass = sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class');
+
           /**
            * Keep code formatting
            *
@@ -950,21 +1006,15 @@
             $pluginTableContent, 1, $count
           );
 
-          if (! $count)
-          {
-            #print sprintf("Something happened wrong in %s (PACKAGE class)\n", $pluginTableLocation);
-          }
-          else
+          if ($count)
           {
             file_put_contents($pluginTableLocation, $pluginTableContent);
-            #print "+update {$pluginTableLocation}\n";
           }
         }
 
         /**
          * File #2
          */
-
         $baseTableLocation = "{$baseDir}/{$pluginName}/{$this->modelName}Table{$this->builderOptions['suffix']}";
         if (is_file($baseTableLocation))
         {
@@ -995,11 +1045,6 @@
               "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
               $baseTableContent, 1, $count
             );
-
-            if (! $count)
-            {
-              #print sprintf("Something happened wrong in %s (PACKAGE class for default table model)\n", $baseTableLocation);
-            }
           }
 
           file_put_contents($baseTableLocation, $baseTableContent);
