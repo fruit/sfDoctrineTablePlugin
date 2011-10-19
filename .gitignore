@@ -9,5 +9,4 @@ test/fixtures/project/data/db/*
 test/fixtures/project/lib/model/doctrine/
 test/fixtures/project/plugins/.channels/
 test/fixtures/project/plugins/.registry/
-test/fixtures/project/plugins/sfDoctrineGuardPlugin/lib/model/doctrine/
 !.gitignore

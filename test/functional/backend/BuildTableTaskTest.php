@@ -25,37 +25,66 @@
   $task->run(array(), array('uninstall' => true, 'env' => 'test', 'no-confirmation' => true));
 
 
-  /**
-   * Uninstalled model table should be instanceof Doctrine_Table
-   */
+  $t->diag('Checking models');
+
   $tests = array(
     "{$libDir}/sfDoctrineGuardPlugin" => array(
-      'sfGuardGroup', 'sfGuardGroupPermission', 'sfGuardUserGroup', 'sfGuardUser',
+      'sfGuardGroup'            => 'PluginsfGuardGroupTable',
+      'sfGuardGroupPermission'  => 'PluginsfGuardGroupPermissionTable',
+      'sfGuardUserGroup'        => 'PluginsfGuardUserGroupTable',
+      'sfGuardUser'             => 'PluginsfGuardUserTable',
     ),
-    $libDir => array('Post', 'Section', 'Culture'),
+    $libDir => array(
+      'Post'            => 'Doctrine_Table_Example',
+      'Section'         => 'Doctrine_Table_Example',
+      'Culture'         => 'Doctrine_Table_Example',
+      'PostMedia'       => 'Doctrine_Table_Example',
+      'PostMediaImage'  => 'PostMediaTable',
+    ),
   );
 
   foreach ($tests as $path => $models)
   {
-    foreach ($models as $className)
+    $t->diag(sprintf('Entering %s', $path));
+
+    foreach ($models as $modelName => $extendsFrom)
     {
       $t->ok(
-        ! preg_match(
-          "/class\s{$className}Table\sextends\sBase{$className}Table/",
-            file_get_contents("{$path}/{$className}Table.class.php")
+        preg_match(
+          "/class\s{$modelName}Table\sextends\s{$extendsFrom}/",
+          file_get_contents("{$path}/{$modelName}Table.class.php")
         ),
-        sprintf('Class "%sTable" is not instance of "Base%sTable"', $className, $className)
+        sprintf('Class "%sTable" extends from "%s"', $modelName, $extendsFrom)
       );
     }
   }
 
-  $t->ok(
-    preg_match(
-      "/class\sPostMediaImageTable\sextends\sPostMediaTable/",
-      file_get_contents("{$libDir}/PostMediaImageTable.class.php")
+  $t->diag('Checking plugin tables');
+
+  $tests = array(
+    sfConfig::get('sf_plugins_dir') . '/sfDoctrineGuardPlugin/lib/model/doctrine' => array(
+      'sfGuardGroup'            => 'Doctrine_Table',
+      'sfGuardGroupPermission'  => 'Doctrine_Table',
+      'sfGuardUserGroup'        => 'Doctrine_Table',
+      'sfGuardUser'             => 'Doctrine_Table',
     ),
-    'Class "PostMediaImageTable" has correct extend class "PostMediaTable"'
   );
+
+  foreach ($tests as $path => $models)
+  {
+    $t->diag(sprintf('Entering %s', $path));
+
+    foreach ($models as $modelName => $extendsFrom)
+    {
+      $t->ok(
+        preg_match(
+          "/class\sPlugin{$modelName}Table\sextends\s{$extendsFrom}/",
+          file_get_contents("{$path}/Plugin{$modelName}Table.class.php")
+        ),
+        sprintf('Class "%sTable" extends from "%s"', $modelName, $extendsFrom)
+      );
+    }
+  }
 
   /**
    * application, env, depth, minified, uninstall, generator-class, no-confirmation
@@ -78,6 +107,8 @@
       'PostMediaImage' => true,
     ),
   );
+
+  $t->diag('Checking models');
 
   foreach ($tests as $path => $models)
   {
@@ -124,9 +155,50 @@
     }
   }
 
+  $t->diag('Checking tables');
+
+  /**
+   * Base table "extends X" checks (previously task params)
+   */
+  $tests = array(
+    "{$libDir}/sfDoctrineGuardPlugin" => array(
+      # plugin model checks
+      'sfGuardPermission'     => 'PluginsfGuardPermissionTable',
+      'sfGuardUserPermission' => 'PluginsfGuardUserPermissionTable',
+      'sfGuardUser'           => 'PluginsfGuardUserTable',
+    ),
+    $libDir => array(
+      # default model checks
+      'Post'            => 'Doctrine_Table_Example',
+      'Section'         => 'Doctrine_Table_Example',
+      'Culture'         => 'Doctrine_Table_Example',
+      'PostMedia'       => 'Doctrine_Table_Example',
+      # inheritance check
+      'PostMediaImage'  => 'PostMediaTable',
+    ),
+  );
+
+  foreach ($tests as $path => $models)
+  {
+    $t->diag(sprintf('Entering %s', $path));
+
+    foreach ($models as $model => $extendsFrom)
+    {
+      $t->ok(
+        preg_match(
+          "/class\sBase{$model}Table\sextends\s{$extendsFrom}/",
+          file_get_contents("{$path}/base/Base{$model}Table.class.php")
+        ),
+        "Class \"Base{$model}Table\" has extend class \"{$extendsFrom}\""
+      );
+    }
+  }
+
+
   $t->diag('Executing: ./symfony doctrine:build-table --depth=3 --env=test --minified --no-confirmation');
   $task->run(array(), array('depth' => 3, 'env' => 'test', 'minified' => true, 'no-confirmation' => true));
 
+  $t->diag('Checking tables');
 
   foreach ($tests as $path => $models)
   {
@@ -156,10 +228,10 @@
     }
   }
 
-
-
   $t->diag('Executing: ./symfony doctrine:build-table --depth=1 --env=test --generator-class=TestTableGenerator --no-confirmation');
   $task->run(array(), array('depth' => 1, 'env' => 'test', 'generator-class' => 'TestTableGenerator', 'no-confirmation' => true));
+
+  $t->diag('Checking tables');
 
   foreach ($tests as $path => $models)
   {

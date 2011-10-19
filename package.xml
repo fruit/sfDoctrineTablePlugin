@@ -22,11 +22,11 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2011-10-18</date>
-  <time>22:20:00</time>
+  <date>2011-10-19</date>
+  <time>21:50:00</time>
   <version>
-    <release>1.0.2</release>
-    <api>1.0.0</api>
+    <release>1.0.3</release>
+    <api>1.0.1</api>
   </version>
   <stability>
     <release>stable</release>
@@ -34,7 +34,8 @@
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-    * [Fixed] Invalid extends class when uninstalling model with "concrete" inheritance (GH-1)
+    * [Fixed] Uninstalling tables with a custom Doctrine_Table contains invalid class name (GH-2)
+    * [Fixed] Uninstalling/installing plugin base tables with broken class inheritance (GH-3)
   </notes>
   <contents>
     <dir name="/">
@@ -43,15 +44,15 @@
         <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="5db32b5f5bd84cd6a7f4dff131e4384c" role="data" />
       </dir>
       <file name="LICENSE" md5sum="be8ae084e78f9340892a3acd5b41a249" role="data" />
-      <file name="README" md5sum="9718d1e1d288c871d2651de45d4730cc" role="data" />
+      <file name="README" md5sum="4c9a26438d27e1a784501590b8ea7053" role="data" />
       <dir name="lib">
         <dir name="generator">
-          <file name="sfDoctrineTableGenerator.class.php" md5sum="841dba3ba88a609c2febb91a979f0f93" role="data" />
+          <file name="sfDoctrineTableGenerator.class.php" md5sum="c9ef5db2510cd00cab6734aceefcfbd4" role="data" />
         </dir>
         <dir name="vendor">
           <dir name="Doctrine">
             <dir name="Table">
-              <file name="Scoped.php" md5sum="69b54a782449695669a5dbfb8d49afbc" role="data" />
+              <file name="Scoped.php" md5sum="44c027e842e711c91a8a968b4c0ce137" role="data" />
             </dir>
           </dir>
         </dir>
@@ -64,7 +65,7 @@
           <dir name="sfDoctrineTable">
             <dir name="default">
               <dir name="template">
-                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="a867edf111740862fac335017fa72e3d" role="data" />
+                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="07486f2ba053886d2670f19c30b7bd45" role="data" />
               </dir>
             </dir>
           </dir>
@@ -91,6 +92,22 @@
   </dependencies>
   <phprelease />
   <changelog>
+    <release>
+      <version>
+        <release>1.0.3</release>
+        <api>1.0.1</api>
+      </version>
+      <stability>
+        <release>stable</release>
+        <api>stable</api>
+      </stability>
+      <date>2011-10-19</date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+        * [Fixed] Uninstalling tables with a custom Doctrine_Table contains invalid class name (GH-2)
+        * [Fixed] Uninstalling/installing plugin base tables with broken class inheritance (GH-3)
+      </notes>
+    </release>
     <release>
       <version>
         <release>1.0.2</release>

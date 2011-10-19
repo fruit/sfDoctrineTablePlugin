@@ -11,7 +11,7 @@
    * @package    ##PROJECT_NAME##
    * @subpackage table
    * @author     ##AUTHOR_NAME##
-   * @version    v1.0
+   * @version    v1.1
    *
 <?php foreach ($this->getPHPDocByPattern('findBy%s') as $column => $method): ?>
    * @method <?php print $this->getCollectionClass() ?>|array <?php print $method ?>() <?php print $method ?>(scalar $value, int $hydrationMode = null) Finds records by field "<?php print $column ?>"
@@ -49,7 +49,7 @@
 <?php endforeach; ?>
    *
    */
-  abstract class Base<?php print $this->modelName ?>Table extends <?php print $this->getFormClassToExtend() . PHP_EOL ?>
+  abstract class Base<?php print $this->modelName ?>Table extends <?php print $this->getTableToExtendFrom() . PHP_EOL ?>
   {
     /**
      * @return string Base table class name used for late-static-bindings purposes

@@ -29,6 +29,13 @@
      */
     public function __call($method, $arguments)
     {
+      if ('getGenericTableName' == $method)
+      {
+        throw new LogicException(
+          'Inheritence order is invalid. Please install base tables first.'
+        );
+      }
+
       # Late static bindings in action
       $generatedBaseTableClass = new ReflectionClass(static::getGenericTableName());
 

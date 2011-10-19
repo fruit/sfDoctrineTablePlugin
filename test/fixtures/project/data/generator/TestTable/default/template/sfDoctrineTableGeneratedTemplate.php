@@ -12,7 +12,7 @@
 <?php endforeach; ?>
    *
    */
-  abstract class Base<?php print $this->modelName ?>Table extends <?php print $this->getFormClassToExtend() . PHP_EOL ?>
+  abstract class Base<?php print $this->modelName ?>Table extends <?php print $this->getTableToExtendFrom() . PHP_EOL ?>
   {
     /**
      * @return string

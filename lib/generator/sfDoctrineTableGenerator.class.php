@@ -375,8 +375,18 @@
      *
      * @return string
      */
-    public function getFormClassToExtend()
+    public function getTableToExtendFrom()
     {
+      $pluginName = $this->getPluginNameForModel($this->modelName);
+
+      /**
+       * Plugin model base tables should be extended by it's own base table
+       */
+      if ($pluginName)
+      {
+        return "{$this->builderOptions['packagesPrefix']}{$this->modelName}Table";
+      }
+
       $baseClasses = array(
         'Doctrine_Record',
         'sfDoctrineRecord',
@@ -786,6 +796,7 @@
     protected function uninstallTable ()
     {
       $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
+      $customTableClass = sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class');
 
       if (! $this->isPluginModel($this->modelName))
       {
@@ -802,15 +813,6 @@
           return;
         }
 
-        if (null === ($parentInheritedModelName = $this->getParentModel()))
-        {
-          $inheritanceClass = 'Doctrine_Table';
-        }
-        else
-        {
-          $inheritanceClass = "{$parentInheritedModelName}Table";
-        }
-
         $tableContent = file_get_contents($tableLocation);
 
         $count = null;
@@ -822,7 +824,7 @@
          */
         $tableContent = preg_replace(
           "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
-          "class\\1{$this->modelName}Table\\2extends\\3{$inheritanceClass}",
+          "class\\1{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
           $tableContent, 1, $count
         );
 
@@ -849,25 +851,13 @@
 
         if (is_file($pluginTableLocation))
         {
-          if (null === ($parentInheritedModelName = $this->getParentModel()))
-          {
-            $inheritanceClass = 'Doctrine_Table';
-          }
-          else
-          {
-            $inheritanceClass = "{$this->builderOptions['packagesPrefix']}{$parentInheritedModelName}Table";
-          }
-
-
-          $customTableClass = sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class');
-
           $pluginTableContent = file_get_contents($pluginTableLocation);
 
           $count = null;
 
           $pluginTableContent = preg_replace(
             "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+){$customTableClass}/ms",
-            "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$inheritanceClass}",
+            "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
             $pluginTableContent, 1, $count
           );
 
@@ -1068,5 +1058,38 @@
           file_put_contents($baseTableLocation, $baseTableContent);
         }
       }
+    }
+
+    /**
+     * Return right class name to extend when uninstalling base tables
+     *
+     * Uninstalling table class could be other than default class.
+     * It happens when model has custom inheritance or project uses own
+     * Doctrine_Table class.
+     *
+     * @return string
+     */
+    protected function getClassNameToExtendFromAfterUninstalling ()
+    {
+      if (false !== ($pluginName = $this->getPluginNameForModel ($this->modelName)))
+      {
+        return 'Doctrine_Table';
+      }
+
+      $customTableClass
+        = sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class');
+
+      if (null === ($parentInheritedModelName = $this->getParentModel()))
+      {
+        $inheritanceClass = $customTableClass == 'Doctrine_Table_Scoped'
+          ? 'Doctrine_Table'
+          : $customTableClass;
+      }
+      else
+      {
+        $inheritanceClass = "{$parentInheritedModelName}Table";
+      }
+
+      return $inheritanceClass;
     }
   }
