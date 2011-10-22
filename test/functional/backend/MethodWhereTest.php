@@ -359,20 +359,44 @@
   $q = sfGuardUserTable::getInstance()->createQuery('u');
   $q->select('u.id, u.username');
   sfGuardUserTable::getInstance()
-    ->addSelectSfGuardUserGroupCountAsSubSelect($q, 'sgugs_cnt.group_id > ?', array(10))
-    ->addSelectSfGuardUserPermissionCountAsSubSelect($q, 'sgups_cnt.permission_id < ?', array(10))
+    ->withInnerJoinOnForgotPassword($q, 'fp.ip_address = ?', '198.81.129.125')
+    ->addSelectSfGuardUserGroupCountAsSubSelect($q, function(Doctrine_Query $subQuery) {
+      $subQuery->addWhere('sgugs_cnt.group_id > ?', 10);
+    })
+    ->addSelectSfGuardUserPermissionCountAsSubSelect($q, function(Doctrine_Query $subQuery) {
+      $subQuery->addWhere('sgups_cnt.permission_id < ?', 10);
+    })
+    ->addSelectSfGuardUserPermissionCountAsSubSelect($q, function(Doctrine_Query $subQuery) {
+      $subQuery->groupBy('sgups_cnt.permission_id');
+    }, 'more_then_count')
   ;
+  $q->addWhere('u.id != ?', array(8));
 
   $t->is(
     $dql = $q->getDql(),
-    'SELECT u.id, u.username, ' .
-      '(SELECT COUNT(sgugs_cnt.user_id) ' .
-      'FROM sfGuardUserGroup sgugs_cnt ' .
-      'WHERE u.id = sgugs_cnt.user_id AND sgugs_cnt.group_id > ?) AS sf_guard_user_group_count, ' .
-      '(SELECT COUNT(sgups_cnt.user_id) ' .
-      'FROM sfGuardUserPermission sgups_cnt ' .
-      'WHERE u.id = sgups_cnt.user_id AND sgups_cnt.permission_id < ?) AS sf_guard_user_permission_count ' .
-    'FROM sfGuardUser u',
+    'SELECT ' .
+      'u.id, u.username, ' .
+      '(' .
+        'SELECT COUNT(sgugs_cnt.user_id) ' .
+        'FROM sfGuardUserGroup sgugs_cnt ' .
+        'WHERE u.id = sgugs_cnt.user_id AND sgugs_cnt.group_id > ?' .
+      ') AS sf_guard_user_group_count, ' .
+
+      '(' .
+        'SELECT COUNT(sgups_cnt.user_id) ' .
+        'FROM sfGuardUserPermission sgups_cnt ' .
+        'WHERE u.id = sgups_cnt.user_id AND sgups_cnt.permission_id < ?' .
+      ') AS sf_guard_user_permission_count, ' .
+
+      '(' .
+        'SELECT COUNT(sgups_cnt.user_id) ' .
+        'FROM sfGuardUserPermission sgups_cnt ' .
+        'WHERE u.id = sgups_cnt.user_id ' .
+        'GROUP BY sgups_cnt.permission_id' .
+      ') AS more_then_count ' .
+
+    'FROM sfGuardUser u INNER JOIN u.ForgotPassword fp WITH fp.ip_address = ? ' .
+    'WHERE u.id != ?',
     $dql
   );
 

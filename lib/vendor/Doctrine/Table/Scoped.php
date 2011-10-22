@@ -22,8 +22,8 @@
      * Reads generated base table doc and finds called method to apply additional
      * params to run the method forward
      *
-     * @param string  $method     Method that was called
-     * @param array   $arguments  Arguments that was passed with call
+     * @param string  $method     method that was called
+     * @param array   $arguments  arguments that was passed with call
      *
      * @return mixed
      */
@@ -75,10 +75,10 @@
     /**
      * Add specific JOIN on Translation
      *
-     * @param array           $params     List of parameters
-     * @param string          $joinType   Join type: innerJoin/leftJoin
-     * @param Doctrine_Query  $q          Query to apply condition
-     * @param null|string     $culture    Culture lang to use in WITH clause
+     * @param array           $params     list of parameters
+     * @param string          $joinType   join type: innerJoin/leftJoin
+     * @param Doctrine_Query  $q          query to apply condition
+     * @param null|string     $culture    optional culture lang to use in WITH clause
      *
      * @throws InvalidArgumentException
      *
@@ -111,9 +111,9 @@
     /**
      * Adds INNER JOIN on Translation table
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param null|string     $culture  Culture lang to use in WITH clause
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param null|string     $culture  optional culture lang to use in WITH clause
      *
      * @return Doctrine_Table_Scoped
      */
@@ -125,9 +125,9 @@
     /**
      * Adds LEFT JOIN on Translation table
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param null|string     $culture  Culture lang to use in WITH clause
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param null|string     $culture  optional culture lang to use in WITH clause
      *
      * @return Doctrine_Table_Scoped
      */
@@ -139,15 +139,15 @@
     /**
      * Adds specific JOIN to the query
      *
-     * @param array           $params     List of parameters
-     * @param string          $joinType   Join type: innerJoin/leftJoin
-     * @param Doctrine_Query  $q          Query to apply condition
-     * @param string          $with       Additional WITH expression to add to the JOIN
-     * @param array           $args       List of arguments used in WITH expression
+     * @param array           $params     list of parameters
+     * @param string          $joinType   join type: innerJoin/leftJoin
+     * @param Doctrine_Query  $q          query to apply condition
+     * @param string          $with       optional expression to add to the JOIN into WITH
+     * @param array           $args       optional list of arguments used in WITH expression
      *
      * @return Doctrine_Table_Scoped
      */
-    protected function buildJoin (array $params, $joinType, Doctrine_Query $q, $with = null, array $args = array())
+    protected function buildJoin (array $params, $joinType, Doctrine_Query $q, $with = null, $args = array())
     {
       $params['f'] = $params['f'] == '^' ? $q->getRootAlias() : $params['f'];
 
@@ -163,14 +163,14 @@
     /**
      * Adds INNER JOIN clause to the query
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param string          $with     Additional WITH expression to add to the JOIN
-     * @param array           $args     List of arguments used in WITH expression
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param string          $with     optional expression to add to the JOIN into WITH
+     * @param array           $args     optional list of arguments used in WITH expression
      *
      * @return Doctrine_Table_Scoped
      */
-    protected function buildInner (array $params, Doctrine_Query $q, $with = null, array $args = array())
+    protected function buildInner (array $params, Doctrine_Query $q, $with = null, $args = array())
     {
       return $this->buildJoin($params, 'innerJoin', $q, $with, $args);
     }
@@ -178,14 +178,14 @@
     /**
      * Adds LEFT JOIN clause to the query
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param string          $with     Additional WITH expression to add to the JOIN
-     * @param array           $args     List of arguments used in WITH expression
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param string          $with     optional expression to add to the JOIN into WITH
+     * @param array           $args     optional list of arguments used in WITH expression
      *
      * @return Doctrine_Table_Scoped
      */
-    protected function buildLeft (array $params, Doctrine_Query $q, $with = null, array $args = array())
+    protected function buildLeft (array $params, Doctrine_Query $q, $with = null, $args = array())
     {
       return $this->buildJoin($params, 'leftJoin', $q, $with, $args);
     }
@@ -193,9 +193,9 @@
     /**
      * Adds AND expression to the WHERE clause with params taken from parsed PHPDoc
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param scalar          $value    Argument used in expression
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param scalar          $value    argument used in expression
      *
      * @return Doctrine_Table_Scoped
      */
@@ -211,10 +211,10 @@
     /**
      * Adds AND IN expression to the WHERE clause with params taken from parsed PHPDoc
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param array           $values   List of arguments passed to condition
-     * @param boolean         $not      Whether to insert NOT to the clause
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param array           $values   a list of arguments passed to condition
+     * @param boolean         $not      optional condition whether to insert NOT to the clause
      *
      * @return Doctrine_Table_Scoped
      */
@@ -228,9 +228,9 @@
     /**
      * Adds OR expression the WHERE clause
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param scalar          $value    Argument used in expression
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param scalar          $value    argument used in expression
      *
      * @return Doctrine_Table_Scoped
      */
@@ -248,10 +248,10 @@
     /**
      * Adds OR IN expression to the WHERE clause with params taken from parsed PHPDoc
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param array           $values   List of arguments passed to condition
-     * @param boolean         $not      Whether to insert NOT to the clause
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param array           $values   optional list of arguments passed to condition
+     * @param boolean         $not      optional condition whether to insert NOT to the clause
      *
      * @return Doctrine_Table_Scoped
      */
@@ -265,10 +265,10 @@
     /**
      * Adds COUNT expression as JOIN on table
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param string          $with     Additional WITH expression to add to the JOIN
-     * @param array           $args     List of arguments used in WITH expression
+     * @param array           $params   list of parameters
+     * @param Doctrine_Query  $q        query to apply condition
+     * @param string          $with     optional additional WITH expression to add to the JOIN
+     * @param array           $args     optional list of arguments used in WITH expression
      *
      * @throws LogicException
      *
@@ -302,26 +302,23 @@
     /**
      * Builds sub-query witch selects COUNT from a specific table
      *
-     * @param array           $params     List of parameters
-     * @param Doctrine_Query  $q          Query to apply condition
-     * @param string          $andWhere   Additional AND expression to add to the JOIN
-     * @param array           $args       List of arguments used in AND expression
+     * @param array           $params     list of parameters
+     * @param Doctrine_Query  $q          query to apply condition
+     * @param Closure         $callback   optional anonymous function will pass subquery to it as first argument
      *
      * @return Doctrine_Query
      */
-    protected function buildGetCountDqlAsSubSelect (array $params, Doctrine_Query $q, $andWhere = null, array $args = array())
+    protected function buildGetCountDqlAsSubSelect (array $params, Doctrine_Query $q, Closure $callback = null)
     {
-      $subQuery = new Doctrine_Query($q->getConnection());
+      $queryClass = $q->getConnection()->getAttribute(Doctrine::ATTR_QUERY_CLASS);
+
+      $subQuery = new $queryClass($q->getConnection());
       $subQuery->isSubquery(true);
 
       $subQuery
         ->addFrom("{$params['rc']} {$params['o']}")
         ->addSelect("COUNT({$params['o']}.{$params['rf']})")
-        ->addWhere(
-          "{$q->getRootAlias()}.{$params['rl']} = {$params['o']}.{$params['rf']}" .
-            (! $andWhere ? '' : " AND {$andWhere}"),
-          $args
-        )
+        ->addWhere("{$q->getRootAlias()}.{$params['rl']} = {$params['o']}.{$params['rf']}")
       ;
 
       # In case table with SoftDelete behavior
@@ -330,24 +327,34 @@
         $subQuery->addWhere("{$params['o']}.{$params['s']} IS NULL");
       }
 
+      /**
+       * Useful when user wants to add groupBy or another where conditions
+       */
+      if (null !== $callback)
+      {
+        $callback($subQuery);
+      }
+
       return $subQuery;
     }
 
     /**
      * Adds COUNT expression as sub-query
      *
-     * @param array           $params   List of parameters
-     * @param Doctrine_Query  $q        Query to apply condition
-     * @param string          $andWhere Additional WITH expression to add to the JOIN
-     * @param array           $args     List of arguments used in WITH expression
+     * @param array           $params     list of parameters
+     * @param Doctrine_Query  $q          query to apply condition
+     * @param Closure         $callback   optional anonymous function will pass subquery to it as first argument
+     * @param string          $alias      optional alias to name sub-query in AS clause
      *
      * @return Doctrine_Table_Scoped
      */
-    protected function buildAddSelectCountAsSubselect (array $params, Doctrine_Query $q, $andWhere = null, array $args = array())
+    protected function buildAddSelectCountAsSubselect (array $params, Doctrine_Query $q, Closure $callback = null, $alias = null)
     {
-      $subQuery = $this->buildGetCountDqlAsSubselect($params, $q, $andWhere, $args);
+      $subQuery = $this->buildGetCountDqlAsSubselect($params, $q, $callback);
 
-      $q->addSelect("({$subQuery->getDql()}) AS {$params['ca']}");
+      $alias = is_string($alias) ? $alias : $params['ca'];
+
+      $q->addSelect("({$subQuery->getDql()}) AS {$alias}");
 
       return $this;
     }

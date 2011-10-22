@@ -32,16 +32,16 @@
    * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, array $value, bool $not = false) Adds "OR '<?php print $column ?>' IN (?)" expression to the WHERE clause
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByCategory('add_counts_join') as $method => $options): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $with = null, array $params = array()) Adds "COUNT('<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>') as <?php print $options['countFieldName'] ?>" expression to the SELECT clause as result of LEFT JOIN on "<?php print $options['relationName'] ?> <?php print $options['relationAlias'] ?>" and GROUP BY '<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>'
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $with = null, $params = array()) Adds "COUNT('<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>') as <?php print $options['countFieldName'] ?>" expression to the SELECT clause as result of LEFT JOIN on "<?php print $options['relationName'] ?> <?php print $options['relationAlias'] ?>" and GROUP BY '<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>'
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByCategory('add_counts_subselect') as $method => $options): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $andWhere = null, array $params = array()) Adds column "<?php print $options['countFieldName'] ?>" as a sub-query expression to select COUNT('<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>') from "<?php print $options['relationName'] ?> <?php print $options['relationAlias'] ?>"
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, Closure $callback = null, string $alias = null) Adds column "<?php print $options['countFieldName'] ?>" as a sub-query expression to select COUNT('<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>') from "<?php print $options['relationName'] ?> <?php print $options['relationAlias'] ?>"
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByCategory('translation_joins') as $method => $options): ?>
    * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $culture = null) Adds <?php print $options['joinType'] ?> JOIN on "<?php print $options['relationPath'] ?> <?php print $options['aliasOn'] ?>"
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByCategory('joins') as $method => $options): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $with = null, array $params = array()) Adds <?php print $options['joinType'] ?> JOIN on "<?php print $options['relationPath'] ?> <?php print $options['aliasOn'] ?>"
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $with = null, $params = array()) Adds <?php print $options['joinType'] ?> JOIN on "<?php print $options['relationPath'] ?> <?php print $options['aliasOn'] ?>"
 <?php endforeach; ?>
    *
 <?php foreach ($this->getCallableDocs() as $inlineOptions): ?>
