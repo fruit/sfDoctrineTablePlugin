@@ -22,11 +22,11 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2011-10-19</date>
-  <time>21:50:00</time>
+  <date>2011-10-30</date>
+  <time>22:45:00</time>
   <version>
-    <release>1.0.3</release>
-    <api>1.0.1</api>
+    <release>1.1.0</release>
+    <api>1.1.0</api>
   </version>
   <stability>
     <release>stable</release>
@@ -34,8 +34,7 @@
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-    * [Fixed] Uninstalling tables with a custom Doctrine_Table contains invalid class name (GH-2)
-    * [Fixed] Uninstalling/installing plugin base tables with broken class inheritance (GH-3)
+    * [Fixed] Flexible sub-select tuning based on PHP closures
   </notes>
   <contents>
     <dir name="/">
@@ -52,7 +51,7 @@
         <dir name="vendor">
           <dir name="Doctrine">
             <dir name="Table">
-              <file name="Scoped.php" md5sum="44c027e842e711c91a8a968b4c0ce137" role="data" />
+              <file name="Scoped.php" md5sum="c110ac3b9107c391189f1d0f14cc21e8" role="data" />
             </dir>
           </dir>
         </dir>
@@ -65,7 +64,7 @@
           <dir name="sfDoctrineTable">
             <dir name="default">
               <dir name="template">
-                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="07486f2ba053886d2670f19c30b7bd45" role="data" />
+                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="8347e652942c9f23b3597ed998e28a7e" role="data" />
               </dir>
             </dir>
           </dir>
@@ -92,6 +91,21 @@
   </dependencies>
   <phprelease />
   <changelog>
+    <release>
+      <version>
+        <release>1.1.0</release>
+        <api>1.1.0</api>
+      </version>
+      <stability>
+        <release>stable</release>
+        <api>stable</api>
+      </stability>
+      <date>2011-10-30</date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+        * [Fixed] Flexible sub-select tuning based on PHP closures
+      </notes>
+    </release>
     <release>
       <version>
         <release>1.0.3</release>
