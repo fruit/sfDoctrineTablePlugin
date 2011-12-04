@@ -22,10 +22,10 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2011-10-30</date>
-  <time>22:45:00</time>
+  <date>2011-12-04</date>
+  <time>18:07:00</time>
   <version>
-    <release>1.1.0</release>
+    <release>1.1.1</release>
     <api>1.1.0</api>
   </version>
   <stability>
@@ -34,7 +34,7 @@
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-    * [Fixed] Flexible sub-select tuning based on PHP closures
+    * [Fixed] Major bug - some generated method on Translation tables was invalid
   </notes>
   <contents>
     <dir name="/">
@@ -46,7 +46,7 @@
       <file name="README" md5sum="4c9a26438d27e1a784501590b8ea7053" role="data" />
       <dir name="lib">
         <dir name="generator">
-          <file name="sfDoctrineTableGenerator.class.php" md5sum="c9ef5db2510cd00cab6734aceefcfbd4" role="data" />
+          <file name="sfDoctrineTableGenerator.class.php" md5sum="da7f42a7c9e757636b9c55c348f4e853" role="data" />
         </dir>
         <dir name="vendor">
           <dir name="Doctrine">
@@ -91,6 +91,21 @@
   </dependencies>
   <phprelease />
   <changelog>
+    <release>
+      <version>
+        <release>1.1.1</release>
+        <api>1.1.0</api>
+      </version>
+      <stability>
+        <release>stable</release>
+        <api>stable</api>
+      </stability>
+      <date>2011-12-04</date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+        * [Fixed] Major bug - some generated method on Translation tables was invalid
+      </notes>
+    </release>
     <release>
       <version>
         <release>1.1.0</release>
