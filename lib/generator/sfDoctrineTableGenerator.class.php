@@ -501,7 +501,12 @@
 
         $levelAliases[$aliasOn] = true;
 
-        if ($table->hasTemplate('I18n'))
+        /**
+         * Do not use $table->hasTemplate('I18n') to check whether it's time
+         * to generate translation joins - produces invalid aliases when has
+         * many i18n-relations. Hard to catch.
+         */
+        if ('Translation' == $relation->getAlias())
         {
           $this->callableDocs[$m] = $this->inline(array(
             'm' => $m = sprintf('withLeftJoinOnTranslation%s', $viaModelMethodPart),
