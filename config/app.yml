@@ -1,3 +1,13 @@
 all:
   sf_doctrine_table_plugin:
-    custom_table_class:     Doctrine_Table_Scoped
+    custom_table_class: Doctrine_Table_Scoped
+    finder_search_in:
+      - %SF_APPS_DIR%
+      - %SF_LIB_DIR%
+    finder_prune_folders:
+      - base
+      - vendor
+    finder_discard_folders: []
+    finder_name:
+      - "*.php"
+    finder_not_name: []

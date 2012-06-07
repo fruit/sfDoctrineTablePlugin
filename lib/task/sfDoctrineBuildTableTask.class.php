@@ -2,7 +2,7 @@
 
   /*
    * This file is part of the sfDoctrineTablePlugin package.
-   * (c) 2011 Ilya Sabelnikov <fruit.dev@gmail.com>
+   * (c) 2012 Ilya Sabelnikov <fruit.dev@gmail.com>
    *
    * For the full copyright and license information, please view the LICENSE
    * file that was distributed with this source code.
@@ -23,19 +23,39 @@
     protected function configure()
     {
       $this->addOptions(array(
-        new sfCommandOption('application', null, sfCommandOption::PARAMETER_OPTIONAL, 'The application name', true),
-        new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED, 'The environment', 'dev'),
-        new sfCommandOption('depth', null, sfCommandOption::PARAMETER_OPTIONAL, 'How deeply to build join methods', 3),
-        new sfCommandOption('minified', null, sfCommandOption::PARAMETER_NONE, 'Whether to remove @method comments from file'),
-        new sfCommandOption('uninstall', null, sfCommandOption::PARAMETER_NONE, 'Cleans generated base model tables, and reverts its content to default'),
-        new sfCommandOption('generator-class', null, sfCommandOption::PARAMETER_REQUIRED, 'The generator class', 'sfDoctrineTableGenerator'),
-        new sfCommandOption('no-confirmation', null, sfCommandOption::PARAMETER_NONE, 'Whether to force modifing the generated model classes within lib/model/doctrine'),
+        new sfCommandOption('application', null, sfCommandOption::PARAMETER_OPTIONAL,
+          'The application name', true
+        ),
+        new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED,
+          'The environment', 'dev'
+        ),
+        new sfCommandOption('depth', null, sfCommandOption::PARAMETER_OPTIONAL,
+          'How deeply to build join methods', 3
+        ),
+        new sfCommandOption('generator-class', null, sfCommandOption::PARAMETER_REQUIRED,
+          'The generator class', 'sfDoctrineTableGenerator'
+        ),
+        new sfCommandOption('minified', 'm', sfCommandOption::PARAMETER_NONE,
+          'Minifies the base tables by cleaning out from the unused PHPDoc\'s'
+        ),
+        new sfCommandOption('no-phpdoc', 'n', sfCommandOption::PARAMETER_NONE,
+          'Whether to remove all @method comments from file'
+        ),
+        new sfCommandOption('uninstall', null, sfCommandOption::PARAMETER_NONE,
+          'Cleans generated base model tables, and reverts its content to default'
+        ),
+        new sfCommandOption('no-confirmation', 'y', sfCommandOption::PARAMETER_NONE,
+          'Whether to force modifing the generated model classes within lib/model/doctrine'
+        ),
       ));
 
       $this->addArguments(array(
-        new sfCommandArgument('name', sfCommandArgument::OPTIONAL | sfCommandArgument::IS_ARRAY, 'Model name for which to generate base tables.'),
+        new sfCommandArgument(
+          'name',
+          sfCommandArgument::OPTIONAL | sfCommandArgument::IS_ARRAY,
+          "Model name(-s), if nothing is passed, all models will be used."
+        ),
       ));
-
 
       $this->namespace = 'doctrine';
       $this->name = 'build-table';
@@ -46,45 +66,97 @@ The [{$this->namespace}:{$this->name}|INFO] task creates table classes from the 
 
   [./symfony {$this->namespace}:{$this->name}|INFO]
 
-The task read the schema information in [config/doctrine/*.yml|COMMENT]
-from the project and all enabled plugins.
+The task reads the schema information project's schema YAML files in [config/doctrine/*.yml|COMMENT]
+and each enabled plugin-level schema YAML files [plugins/%plugin%/config/doctrine/*.yml|COMMENT].
 
 This task MODIFIES custom classes in [lib/model/doctrine|COMMENT].
 And also it replaces files in [lib/model/doctrine/base|COMMENT].
 
 To increase/decrease joins depth use option [--depth|COMMENT]:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --depth=2|COMMENT]
+    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --depth=2|INFO]
 
-To minify generated base table size on production use flag [--minified|COMMENT]:
+To remove all @method hints from the base tables pass the [--no-phpdoc|COMMENT]/[-n|COMMENT] flag:
 
-    [./symfony {$this->namespace}:{$this->name} --env=prod --minified|COMMENT]
+    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --no-phpdoc|INFO]
 
-When you deside to stop using plugin, uninstall it by running first:
+To minify generated base table size for production use the [--minified|COMMENT]/[-m|COMMENT] flag
+combining with [--no-phpdoc|COMMENT]/[-n|COMMENT] flag:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --uninstall|COMMENT]
+    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --minified --no-phpdoc|INFO]
+
+When you deside to stop using plugin, uninstall it by passing [--uninstall|COMMENT] flag:
+
+    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --uninstall|INFO]
+
+Sometimes it's necessary to skip confirmation dialogs automatically with positive answer.
+For such cases use the [--no-confirmation|COMMENT]/[-y|COMMENT] flag:
+
+    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --depth=2 --no-confirmation|INFO]
 
 EOF;
     }
 
     protected function execute ($arguments = array(), $options = array())
     {
+
+      $manager = Doctrine_Manager::getInstance();
+
+      $currentTableClass = $manager->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
+      $defaultTableClass = sfDoctrineTableGenerator::DEFAULT_TABLE_CLASS;
+
+      if ($currentTableClass !== $defaultTableClass)
+      {
+        if (! class_exists($currentTableClass))
+        {
+          $this->logBlock(sprintf('Class "%s" not found.', $currentTableClass), 'ERROR');
+
+          return 4;
+        }
+
+        if ('Doctrine_Table' === $currentTableClass)
+        {
+          $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, $defaultTableClass);
+        }
+        else
+        {
+          if (! is_subclass_of($currentTableClass, $defaultTableClass))
+          {
+            $this->logBlock(sprintf(
+              'The current doctrine table class "%s" has not "%s" class as one of its parents',
+              $currentTableClass, $defaultTableClass
+            ), 'ERROR');
+
+            return 5;
+          }
+
+          $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, $currentTableClass);
+        }
+      }
+
       $this->logSection('doctrine', 'generating generic table classes');
 
-      if (0 >= $options['depth'])
+      if (0 >= (int) $options['depth'])
       {
         $this->logBlock('Value --depth is a number from 1 to N', 'ERROR');
-        return false;
+
+        return 1;
       }
 
       if (! class_exists($options['generator-class']))
       {
-        $this->logBlock(sprintf('Generator class "%s" not found.', $options['generator-class']), 'ERROR');
-        return false;
+        $this->logBlock(
+          sprintf(
+            'Generator class "%s" not found.',
+            $options['generator-class']
+          ),
+          'ERROR'
+        );
+
+        return 2;
       }
 
       $databaseManager = new sfDatabaseManager($this->configuration);
-      $sfDoctrinePlugin = $this->configuration->getPluginConfiguration('sfDoctrinePlugin');
 
       if (! empty ($arguments['name']))
       {
@@ -92,15 +164,20 @@ EOF;
         {
           Doctrine_Core::modelsAutoload($modelName);
 
-          if (! class_exists($modelName))
+          if (class_exists($modelName))
           {
-            $this->logBlock(
-              sprintf('Model name "%s" is not registered in current connection', $modelName),
-              'ERROR'
-            );
-
-            return;
+            continue;
           }
+
+          $this->logBlock(
+            sprintf(
+              'Model name "%s" is not registered in current connection',
+              $modelName
+            ),
+            'ERROR'
+          );
+
+          return 3;
         }
       }
 
@@ -119,21 +196,21 @@ EOF;
       {
         $this->logSection('doctrine', 'task aborted');
 
-        return 1;
+        return 0;
       }
 
       $generatorManager = new sfGeneratorManager($this->configuration);
       $generatorManager->generate($options['generator-class'], array(
-        'env'       => (string) $options['env'],
-        'depth'     => ((int) $options['depth']) - 1,
-        'minified'  => (bool) $options['minified'],
-        'uninstall' => (bool) $options['uninstall'],
-        'models'    => $arguments['name'],
+        'env'         => (string) $options['env'],
+        'depth'       => ((int) $options['depth']) - 1,
+        'no-phpdoc'   => (bool) $options['no-phpdoc'],
+        'uninstall'   => (bool) $options['uninstall'],
+        'minify'      => (bool) $options['minified'],
+        'models'      => $arguments['name'],
       ));
 
-
       $properties = array();
-      $iniFile = sfConfig::get('sf_config_dir').DIRECTORY_SEPARATOR.'properties.ini';
+      $iniFile = sfConfig::get('sf_config_dir') . '/properties.ini';
 
       if (is_file($iniFile))
       {
@@ -148,6 +225,11 @@ EOF;
           ? $properties['symfony']['author']
           : 'Your name here',
       );
+
+      $sfDoctrinePlugin = $this
+        ->configuration
+        ->getPluginConfiguration('sfDoctrinePlugin')
+      ;
 
       $builderOptions = $sfDoctrinePlugin->getModelBuilderOptions();
 
@@ -175,5 +257,7 @@ EOF;
       $this->getFilesystem()->replaceTokens($files, '##', '##', $constants);
 
       $this->reloadAutoload();
+
+      return 0;
     }
   }

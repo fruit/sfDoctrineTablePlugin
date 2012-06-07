@@ -13,7 +13,7 @@
     The sfDoctrineTablePlugin generates feature packed base tables to each model.
     Base table contains PHPDocs of available pre-generated WHERE, COUNT
     and JOIN considering table relations and its depth. List of new available
-    methods are accessed through the PHPDoc tag @method and are suitable for IDE
+    methods are accessed through the PHPDoc tag @method and is suitable for IDE
     users only.
   </description>
   <lead>
@@ -22,11 +22,11 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2011-12-04</date>
-  <time>18:07:00</time>
+  <date>2012-06-07</date>
+  <time>17:19:58</time>
   <version>
-    <release>1.1.1</release>
-    <api>1.1.0</api>
+    <release>1.2.0</release>
+    <api>1.2.0</api>
   </version>
   <stability>
     <release>stable</release>
@@ -34,40 +34,43 @@
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-    * [Fixed] Major bug - some generated method on Translation tables was invalid
+    * [Feature] Added task no-phpdoc option
+    * [Feature] Task's option "--minified" now removes clean up unused methods from generated base tables
+    * [Updated] Task tests are separated
+    * [Added] Added new tests
   </notes>
   <contents>
     <dir name="/">
-      <dir name="config">
-        <file name="app.yml" md5sum="972b0b8c2f1d44030167c393979546f5" role="data" />
-        <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="5db32b5f5bd84cd6a7f4dff131e4384c" role="data" />
-      </dir>
-      <file name="LICENSE" md5sum="be8ae084e78f9340892a3acd5b41a249" role="data" />
-      <file name="README" md5sum="4c9a26438d27e1a784501590b8ea7053" role="data" />
-      <dir name="lib">
-        <dir name="generator">
-          <file name="sfDoctrineTableGenerator.class.php" md5sum="da7f42a7c9e757636b9c55c348f4e853" role="data" />
-        </dir>
-        <dir name="vendor">
-          <dir name="Doctrine">
-            <dir name="Table">
-              <file name="Scoped.php" md5sum="c110ac3b9107c391189f1d0f14cc21e8" role="data" />
-            </dir>
-          </dir>
-        </dir>
-        <dir name="task">
-          <file name="sfDoctrineBuildTableTask.class.php" md5sum="a9f736f228aa6d84a73eff1fbfa152e9" role="data" />
-        </dir>
-      </dir>
       <dir name="data">
         <dir name="generator">
           <dir name="sfDoctrineTable">
             <dir name="default">
               <dir name="template">
-                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="8347e652942c9f23b3597ed998e28a7e" role="data" />
+                <file name="sfDoctrineTableGeneratedTemplate.php" md5sum="b17c82225ea9bfa733399783a6f032f7" role="data" />
               </dir>
             </dir>
           </dir>
+        </dir>
+      </dir>
+      <file name="README" md5sum="c8d52bbe71b3f39f699831647ec173fb" role="data" />
+      <dir name="config">
+        <file name="app.yml" md5sum="7f37fc8aac0d6179ad412732872d3f6b" role="data" />
+        <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="33d8338c7b1c93f214a737a3cf6926f5" role="data" />
+      </dir>
+      <file name="LICENSE" md5sum="e879218e6f332b0b4017fab8a2925ce9" role="data" />
+      <dir name="lib">
+        <dir name="vendor">
+          <dir name="Doctrine">
+            <dir name="Table">
+              <file name="Scoped.php" md5sum="53b1541317219769775d0f1a6f9f0206" role="data" />
+            </dir>
+          </dir>
+        </dir>
+        <dir name="generator">
+          <file name="sfDoctrineTableGenerator.class.php" md5sum="af50842ef6f661af03d47677c95bd483" role="data" />
+        </dir>
+        <dir name="task">
+          <file name="sfDoctrineBuildTableTask.class.php" md5sum="02bf706194540cb08604aed393e0adae" role="data" />
         </dir>
       </dir>
     </dir>
@@ -91,6 +94,24 @@
   </dependencies>
   <phprelease />
   <changelog>
+    <release>
+      <version>
+        <release>1.2.0</release>
+        <api>1.2.0</api>
+      </version>
+      <stability>
+        <release>stable</release>
+        <api>stable</api>
+      </stability>
+      <date>2012-06-07</date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+        * [Feature] Added task no-phpdoc option
+        * [Feature] Task's option "--minified" now removes clean up unused methods from generated base tables
+        * [Updated] Task tests are separated
+        * [Added] Added new tests
+      </notes>
+    </release>
     <release>
       <version>
         <release>1.1.1</release>

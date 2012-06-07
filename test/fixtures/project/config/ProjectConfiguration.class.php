@@ -23,4 +23,10 @@
         'sfDoctrineGuardPlugin',
       ));
     }
+
+    public function configureDoctrine (Doctrine_Manager $manager)
+    {
+//      $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, 'Doctrine_Table_Example');
+//      $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, 'Doctrine_Table_Scoped');
+    }
   }

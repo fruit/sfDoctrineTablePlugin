@@ -2,7 +2,7 @@
 
   /*
    * This file is part of the sfDoctrineTablePlugin package.
-   * (c) 2011 Ilya Sabelnikov <fruit.dev@gmail.com>
+   * (c) 2012 Ilya Sabelnikov <fruit.dev@gmail.com>
    *
    * For the full copyright and license information, please view the LICENSE
    * file that was distributed with this source code.
@@ -17,16 +17,13 @@
    */
   class sfDoctrineTablePluginConfiguration extends sfPluginConfiguration
   {
+    const VERSION = '1.2.0';
+
     /**
      * @see sfPluginConfiguration
      */
     public function initialize ()
     {
-      $manager = Doctrine_Manager::getInstance();
-
-      $manager->setAttribute(
-        Doctrine_Core::ATTR_TABLE_CLASS,
-        sfConfig::get('app_sf_doctrine_table_plugin_custom_table_class')
-      );
+      
     }
   }

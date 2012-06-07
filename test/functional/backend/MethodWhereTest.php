@@ -2,7 +2,7 @@
 
   /*
    * This file is part of the sfDoctrineTablePlugin package.
-   * (c) 2011 Ilya Sabelnikov <fruit.dev@gmail.com>
+   * (c) 2012 Ilya Sabelnikov <fruit.dev@gmail.com>
    *
    * For the full copyright and license information, please view the LICENSE
    * file that was distributed with this source code.
@@ -15,7 +15,13 @@
 
   $task = new sfDoctrineBuildTableTask(new sfEventDispatcher(), new sfFormatter());
   $t->diag('Executing: ./symfony doctrine:build-table --depth=3 --no-confirmation --env=test');
-  $task->run(array(), array('depth' => 3, 'no-confirmation' => true, 'env' => 'test'));
+  $returnCode = $task->run(array(), array('depth' => 3, 'no-confirmation' => true, 'env' => 'test'));
+
+  if (0 != $returnCode)
+  {
+    $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
+    return;
+  }
 
 
   class Test_Doctrine_Query extends Doctrine_Query
@@ -80,7 +86,7 @@
    * Joins
    */
 
-  # single Inner join with select all
+  // single Inner join with select all
 
   $q = $postTable->createQuery('p')->select('id');
 
@@ -99,7 +105,7 @@
 
   $t->ok(isset($r['Section']), 'Section is part of SELECT clause');
 
-  # single Inner join without select all
+  // single Inner join without select all
 
   $q = $postTable->createQuery('p')->select('id');
 
@@ -117,7 +123,7 @@
 
   $t->ok(! isset($r['Section']), 'Section is not a part of SELECT clause');
 
-  # double 1-level Inner joins without select all
+  // double 1-level Inner joins without select all
 
   $postTable = PostTable::getInstance();
 
@@ -142,22 +148,19 @@
 
   $post = $q->limit(1)->fetchOne(array(), Doctrine_Core::HYDRATE_ARRAY);
 
-  $t->is($post['is_section_active'], 1, 'Expected value of "is_section_active" is 1');
-  $t->is($post['culture_name'], 'English', 'Expected value of "culture_name" is "English"');
-
-  unset($post['id'], $post['Section']['id'], $post['Culture']['id']);
+  unset($post['id']);
 
   $snapshot = array(
     'title' => 'Parsing XML documents with CSS selectors',
     'is_section_active' => '1',
     'culture_name' => 'English',
-    'Section' => array ('is_section_active' => '1'),
-    'Culture' => array ('culture_name' => 'English'),
+    'is_section_active' => '1',
+    'culture_name' => 'English',
   );
 
-  $t->is($post, $snapshot, 'Retrieved snapshot matches');
+  $t->is_deeply($post, $snapshot, 'Retrieved snapshot matches');
 
-  # double 1 level Left joins without select all
+  // double 1 level Left joins without select all
 
   $postTable = PostTable::getInstance();
 
@@ -183,7 +186,7 @@
   $t->ok(is_array($post['Culture']), 'Culure sub-array not empty');
 
 
-  # 2-level joins with translation table
+  // 2-level joins with translation table
 
   $q = $postTable->createQuery('p')->select('p.*');
   $postTable
@@ -201,7 +204,7 @@
     'WHERE p.id = ?', $dql
   );
 
-  # 2-level joins with all translation rows
+  // 2-level joins with all translation rows
 
   $q = $postTable->createQuery('p')->select('p.*');
   $postTable
@@ -221,7 +224,7 @@
     $dql
   );
 
-  # more difficult joins
+  // more difficult joins
 
   $q = sfGuardUserTable::getInstance()->createQuery('u');
 
@@ -237,9 +240,9 @@
     $dql = $q->getDql(),
     'SELECT u.* ' .
     'FROM sfGuardUser u ' .
-      'INNER JOIN u.Groups gs ' .  # gs = [g]roups, [s] - one-2-many (plural)
-      'LEFT JOIN gs.Permissions gs_ps ' . # gs_ps = [g]roups 1:N, [p]ermissions 1:N (s)
-      'INNER JOIN gs_ps.sfGuardGroupPermission gs_ps_sggps', # sggps = [S]f[G]uard[G]roup[P]ermission + 1:N (s)
+      'INNER JOIN u.Groups gs ' .  // gs = [g]roups, [s] - one-2-many (plural)
+      'LEFT JOIN gs.Permissions gs_ps ' . // gs_ps = [g]roups 1:N, [p]ermissions 1:N (s)
+      'INNER JOIN gs_ps.sfGuardGroupPermission gs_ps_sggps', // sggps = [S]f[G]uard[G]roup[P]ermission + 1:N (s)
     $dql
   );
 
@@ -264,9 +267,9 @@
   );
 
 
-  # COUNT as JOIN
+  // COUNT as JOIN
 
-  # without additional condition
+  // without additional condition
   $q = sfGuardUserTable::getInstance()->createQuery('u');
   $q->select('u.*');
   sfGuardUserTable::getInstance()->addSelectSfGuardUserGroupCountAsJoin($q);
@@ -279,7 +282,7 @@
     $dql
   );
 
-  # with additional condition
+  // with additional condition
   $q = sfGuardUserTable::getInstance()->createQuery('u');
   $q->select('u.*');
   sfGuardUserTable::getInstance()->addSelectSfGuardUserGroupCountAsJoin(
@@ -298,7 +301,7 @@
   );
 
 
-  # count from table with SoftDelete behavior
+  // count from table with SoftDelete behavior
 
   $q = $postTable->createQuery('p')->select('p.*');
   $postTable->addSelectImagesCountAsJoin($q);
@@ -312,7 +315,7 @@
     $dql
   );
 
-  # trying to make JOIN with pre-added GROUP_BY
+  // trying to make JOIN with pre-added GROUP_BY
 
   try
   {
@@ -334,7 +337,7 @@
    * COUNT as Sub-select
    */
 
-  # without additional condition
+  // without additional condition
   $q = sfGuardUserTable::getInstance()->createQuery('u');
   $q->select('u.id, u.username');
   sfGuardUserTable::getInstance()
@@ -355,7 +358,7 @@
     $dql
   );
 
-  # with additional condition
+  // with additional condition
   $q = sfGuardUserTable::getInstance()->createQuery('u');
   $q->select('u.id, u.username');
   sfGuardUserTable::getInstance()
@@ -401,7 +404,7 @@
   );
 
 
-  # count from table with SoftDelete behavior
+  // count from table with SoftDelete behavior
 
   $q = $postTable->createQuery('p')->select('p.*');
   $postTable->addSelectImagesCountAsSubSelect($q);

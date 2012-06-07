@@ -4,12 +4,12 @@ The ``sfDoctrineTablePlugin`` generates feature packed base tables to each model
 Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT``
 and ``JOIN`` considering table relations and its depth. List of new available
 methods are accessed through the PHPDoc tag @method and are suitable for IDE
-users only (prefect implementation in [NetBeans 7.1](http://netbeans.org/downloads/index.html "NetBeans Download page"))
+users only (prefect implementation in [NetBeans 7.2](http://netbeans.org/downloads/index.html "NetBeans Download page"))
 
 # Table of contents
 
  1. <a href="#desc">Description</a>
- 1. <a href="#screenshot">Screenshots</a>
+ 1. <a href="#screenshot">Screenshot</a>
  1. <a href="#install">Installation</a>
  1. <a href="#uninstall">Uninstallation</a>
  1. <a href="#setup">Setup</a>
@@ -26,47 +26,46 @@ users only (prefect implementation in [NetBeans 7.1](http://netbeans.org/downloa
    1. <a href="#h5_5">Base tables generation for a specific models</a>
  1. <a href="#how">How it works</a>
  1. <a href="#problem">Known problem</a>
- 1. <a href="#bench">Benchmarks</a>
  1. <a href="#tdd">TDD</a>
 
 # 1. <a id="desc">Description</a>
 
-Plugin helps you not to remember tables relation aliases and escape from the constructing left and/or inner joins.
+Plugin helps you not to keep in mind table relation aliases and escape from the
+constructing left and/or inner joins.
 It gives you ability to use pre-generated methods with IDE code-completion
-to speed-up your coding. Also, you could add your owns methods to the generator's
+to speed-up your coding. Also, you can easy add your owns methods to the generator's
 template by extending it.
 
-# 2. <a id="screenshot">Screenshots</a>
+# 2. <a id="screenshot">Screenshot</a>
 
-[![Auto-completion in NetBeans 7.1 Pic1](https://lh4.googleusercontent.com/-itKB-UZxEGY/TpNJMJ48API/AAAAAAAABeE/KLMlg-nMjX0/s400/Screenshot-SymfonyPluginDevelopment%252520-%252520NetBeans%252520IDE%252520Dev%252520201110070600-1.png "Click to zoom-in")](https://lh3.googleusercontent.com/-itKB-UZxEGY/TpNJMJ48API/AAAAAAAABeo/yvblyYlYSZE/s1152/Screenshot-SymfonyPluginDevelopment%2B-%2BNetBeans%2BIDE%2BDev%2B201110070600-1.png "Preview")
-[![Auto-completion in NetBeans 7.1 Pic2](https://lh3.googleusercontent.com/-IYOodci9R0M/TpNMExT8c2I/AAAAAAAABeU/CGejbeMYcOo/s400/Screenshot-SymfonyPluginDevelopment%252520-%252520NetBeans%252520IDE%252520Dev%252520201110070600-2.png "Click to zoom-in")](https://lh3.googleusercontent.com/-IYOodci9R0M/TpNMExT8c2I/AAAAAAAABeU/CGejbeMYcOo/s1268/Screenshot-SymfonyPluginDevelopment%252520-%252520NetBeans%252520IDE%252520Dev%252520201110070600-2.png "Preview")
+[![Auto-completion in NetBeans 7.1 Pic1](https://lh6.googleusercontent.com/-V4Pap4aTKBs/T9C2lqajhgI/AAAAAAAABh8/lD-umgg5vDw/w696-h563-k/Tooltip_001.png "Click to zoom-in")](https://lh6.googleusercontent.com/-V4Pap4aTKBs/T9C2lqajhgI/AAAAAAAABh8/lD-umgg5vDw/s925/Tooltip_001.png "Preview")
 
 # 3. <a id="install">Installation</a>
 
- * As symfony plugin
+**As symfony plugin**
 
-  * Installing
+_Installing_
 
-            ./symfony plugin:install sfDoctrineTablePlugin
+    ./symfony plugin:install sfDoctrineTablePlugin
 
-  * Upgrading
+_Upgrading_
 
-            cd plugins/sfDoctrineTablePlugin
-            git pull origin master
-            cd ../..
+    cd plugins/sfDoctrineTablePlugin
+    git pull origin master
+    cd ../..
 
- * As GIT submodule (in general for plugin-developers - contains test suit)
+**As GIT submodule** (in general for plugin-developers - contains test suit)
 
-  * Installation
+_Installation_
 
-            $ git submodule add git://github.com/fruit/sfDoctrineTablePlugin.git plugins/sfDoctrineTablePlugin
-            $ git submodule init plugins/sfDoctrineTablePlugin
+    git submodule add git://github.com/fruit/sfDoctrineTablePlugin.git plugins/sfDoctrineTablePlugin
+    git submodule init plugins/sfDoctrineTablePlugin
 
-  * Upgrading
+_Upgrading_
 
-            $ cd plugins/sfDoctrineTablePlugin
-            $ git pull origin master
-            $ cd ../..
+    cd plugins/sfDoctrineTablePlugin
+    git pull origin master
+    cd ../..
 
 # 4. <a id="uninstall">Uninstallation</a>
 
@@ -114,6 +113,25 @@ template by extending it.
         # Extended by plugin class Doctrine_Table
         # (default: Doctrine_Table_Scoped)
         custom_table_class:   Doctrine_Table_Scoped
+
+        # Given below finder_* options used to find which methods
+        # are used in your project and further remove then in production environment
+
+        # List of directories where business logic are located
+        finder_search_in:
+          - %SF_APPS_DIR%
+          - %SF_LIB_DIR%
+        # List of folders to prune
+        finder_prune_folders:
+          - base
+          - vendor
+        # List of folders to discard
+        finder_discard_folders: []
+        # List of filenames to add
+        finder_name:
+          - "*.php"
+        # List of filenames to skip
+        finder_not_name: []
 
   Use case: You have extended by yourself class ``Doctrine_Table`` and name it
   ``Doctrine_Table_Advanced``, thus plugin configuration should looks like:
@@ -177,6 +195,9 @@ template by extending it.
 
   After base table are generated, you can see following methods beside other methods:
 
+    [php]
+    <?php
+
     $q = CityTable::getInstance()->createQuery('ci');
     CityTable::getInstance()
       ->withInnerJoinOnCountry($q)
@@ -184,6 +205,8 @@ template by extending it.
       ->withLeftJoinOnCapitalOfTheCountryViaCountryAndCapital($q);
 
   The generated SQL (``$q->getSqlQuery()``) will looks like:
+
+    [sql]
 
     SELECT
       c.id AS c__id, c.country_id AS c__country_id, c.title AS c__title,
@@ -207,7 +230,7 @@ template by extending it.
 
 ### 5.3.1 <a id="h5_3_1">Usage</a>
 
-    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--minified] [--uninstall] [--generator-class="..."] [--no-confirmation] [name1] ... [nameN]
+    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--generator-class="..."] [-m|--minified] [-n|--no-phpdoc] [--uninstall] [-y|--no-confirmation] [name1] ... [nameN]
 
   For full task details, please refer to the task help block:
 
@@ -229,21 +252,10 @@ template by extending it.
 ### 5.3.4 <a id="h5_3_4">Optimize tables for production</a>
 
   When you deploy your code to production you need to minimize generated base
-  table class file size by passing flag ``--minified`` (e.i. base tables without
-  @method hints):
+  table class file size by passing flag ``--no-phpdoc`` (e.i. base tables without
+  @method hints) and ``--minified`` (e.i. do not generate methods, that aren't used in project).
 
-    ./symfony doctrine:build-table --env=prod --minified
-
-  **Remember** to enable APC and be sure, cache is working right!
-
-    # Check for ``apc.num_files_hint`` is greater than yours project's PHP file count:
-    find ./ -type f -name "*.php" | wc -l
-
-    # Check for ``apc.max_file_size`` is greater than your project's worst PHP file:
-    find ./ -type f -name "*.php" -size +1M
-
-    # Check for ``apc.shm_size`` is greater than all PHP files size:
-    find ./ -type f -name "*.php" -ls | awk '{total += $7} END {print total}'
+    ./symfony doctrine:build-table --env=prod --minified --no-phpdoc
 
 ## 5.4. <a id="h5_4">Turning off base table generation for specific models</a>
 
@@ -270,7 +282,7 @@ template by extending it.
 
   Now you can pass manually a list of models you would like to generate base tables
   (NOTE: table generation should not be turned off - see
-  <a href="#h5_4">Turning off base table generation for specific models</a> for
+  <a href="#h5_4">5.4. Turning off base table generation for specific models</a> for
   more information)
 
     ./symfony doctrine:build-table City Country
@@ -321,6 +333,7 @@ before existing one.
   Assume we need to join both tables Company and Category from the table Article.
 
     [php]
+    <?php
 
     $q = ArticeTable::getInstance()->createQuery('a');
     ArticeTable::getInstance()
@@ -337,6 +350,7 @@ before existing one.
   Next step is to fix the query given above by removing all things related to a "Company":
 
     [php]
+    <?php
 
     $q = ArticeTable::getInstance()->createQuery('a');
     ArticeTable::getInstance()
@@ -349,63 +363,24 @@ before existing one.
   So, to fix code sample, you need to replace "ca.slug" with "c.slug".
 
     [php]
+    <?php
 
     $q->select('a.*, c.slug')->execute();
 
   If anybody could help me to elegantly solve this issue - I will be pleasantly thankful.
 
-# 8. <a id="bench">Benchmarks</a>
-
-  Given below statistical numbers are generated for production environment
-  with ``--minified`` flag and enabled APC:
-
-  Here is time cost to initialize new table instance (e.g. ``Doctrine::getTable('MyTable')``)
-  with generated base table and without.
-  As you could notice, this it pretty large table with 26 relations and 19 columns.
-  It demonstrates that even big table load time is slower than 0.00142 s. comparing
-  to a default initialization time.
-
-  All the more so it's just first time you initialize any table, all following
-  table initializations will be comparatively slower than 0.0001 s.
-
-    +----------------------------------------------------------------------+
-    |              Time required to initialize table instance              |
-    +----------+--------+--------+---------------+-------------+-----------+
-    | Relation | Column | Depth  |    Default    | With plugin | Slower on |
-    |   count  |  count | level  |      (s)      |     (s)     |    (s)    |
-    +----------+--------+--------+---------------+-------------+-----------+
-    |    26    |   19   |   3    |       0.01411 |     0.01553 |   0.00142 |
-    +----------+--------+--------+---------------+-------------+-----------+
-
-  Given below table demonstrates how many time is spent to analyze PHPDoc.
-  Referencing to table data, generated base table will add additionally ~ 0.0003 s.
-  to each magic method call.
-
-    +-------------------------------------------------------------------------+
-    |          Time required to add new Doctrine Query parts                  |
-    +----------------------+------------+-----------+-------------+-----------+
-    |        Method        |   Method   |  Default  | With plugin | Slower on |
-    |         name         | complexity |    (s)    |     (s)     |    (s)    |
-    +----------------------+------------+-----------+-------------+-----------+
-    |      orWhereId       |    low     |   0.00003 |     0.00035 |   0.00032 |
-    +----------------------+------------+-----------+-------------+-----------+
-    | withLeftJoinOnGroups |    high    |   0.00410 |     0.00435 |   0.00025 |
-    +----------------------+------------+-----------+-------------+-----------+
-
-  Things to remember:
-
-  * Minified classes uses less space on disk, but does not affects the table initialization time.
-  * Depth level with enabled APC does not affects the table initialization time (difference less than 0.001 s.).
-  * The more generation depth, table relations and columns count, the more file size.
-
-# 9. <a id="tdd">TDD</a>
+# 8. <a id="tdd">TDD</a>
 
   Tested basic functionality.
 
     [plain]
 
-    [sfDoctrineTable] functional/backend/BuildTableTaskTest..............ok
     [sfDoctrineTable] functional/backend/MethodExistanceTest.............ok
     [sfDoctrineTable] functional/backend/MethodWhereTest.................ok
+    [sfDoctrineTable] functional/backend/TaskDepthTest...................ok
+    [sfDoctrineTable] functional/backend/TaskGeneratorTest...............ok
+    [sfDoctrineTable] functional/backend/TaskMinifiedTest................ok
+    [sfDoctrineTable] functional/backend/TaskNoPhpDocTest................ok
+    [sfDoctrineTable] functional/backend/TaskUninstallTest...............ok
      All tests successful.
-     Files=3, Tests=138
+     Files=7, Tests=140

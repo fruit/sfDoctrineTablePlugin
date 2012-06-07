@@ -7,7 +7,6 @@
    *
    * DO NOT EDIT IT, EXTEND IT!
    *
-   * @uses       sfDoctrineTablePlugin
    * @package    ##PROJECT_NAME##
    * @subpackage table
    * @author     ##AUTHOR_NAME##

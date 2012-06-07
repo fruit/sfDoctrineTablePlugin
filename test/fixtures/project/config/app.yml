@@ -1,3 +1,1 @@
 all:
-  sf_doctrine_table_plugin:
-    custom_table_class:   Doctrine_Table_Example

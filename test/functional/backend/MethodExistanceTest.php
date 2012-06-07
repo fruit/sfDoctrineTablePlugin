@@ -2,7 +2,7 @@
 
   /*
    * This file is part of the sfDoctrineTablePlugin package.
-   * (c) 2011 Ilya Sabelnikov <fruit.dev@gmail.com>
+   * (c) 2012 Ilya Sabelnikov <fruit.dev@gmail.com>
    *
    * For the full copyright and license information, please view the LICENSE
    * file that was distributed with this source code.
@@ -16,7 +16,14 @@
   $t->diag('Executing: ./symfony doctrine:build-table --depth=3 --no-confirmation --env=test');
 
   $task = new sfDoctrineBuildTableTask(new sfEventDispatcher(), new sfFormatter());
-  $task->run(array(), array('depth' => 3, 'no-confirmation' => true, 'env' => 'test'));
+
+  $returnCode = $task->run(array(), array('depth' => 3, 'no-confirmation' => true, 'env' => 'test'));
+
+  if (0 != $returnCode)
+  {
+    $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
+    return;
+  }
 
   $cultureTable = CultureTable::getInstance();
   $cityTable = CityTable::getInstance();

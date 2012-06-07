@@ -2,7 +2,7 @@
 
   /*
    * This file is part of the sfDoctrineTablePlugin package.
-   * (c) 2011 Ilya Sabelnikov <fruit.dev@gmail.com>
+   * (c) 2012 Ilya Sabelnikov <fruit.dev@gmail.com>
    *
    * For the full copyright and license information, please view the LICENSE
    * file that was distributed with this source code.
@@ -36,27 +36,27 @@
         );
       }
 
-      # Late static bindings in action
+      // Late static bindings in action
       $generatedBaseTableClass = new ReflectionClass(static::getGenericTableName());
 
       $phpdoc = $generatedBaseTableClass->getDocComment();
 
       $searchKey = "m={$method},";
-      $pos = strpos($phpdoc, $searchKey);
+      $pos = stripos($phpdoc, $searchKey);
 
       if (false === $pos)
       {
         return parent::__call($method, $arguments);
       }
 
-      # calculation where in PHPDoc is located desired method
+      // calculation where in PHPDoc is located desired method
       $break = strpos($phpdoc, PHP_EOL, $pos);
       $searchKeyLenght = strlen($searchKey);
       $stringParams = substr(
         $phpdoc, $pos + $searchKeyLenght, $break - ($pos + $searchKeyLenght) - 1
       );
 
-      # create handy array to work with parsed parameters
+      // create handy array to work with parsed parameters
       $params = array();
       foreach (explode(',', $stringParams) as $row)
       {
@@ -64,11 +64,11 @@
         $params[$key] = $value;
       }
 
-      # $params["c"] is a string representation of method to call
-      # with parsed params
+      // $params["c"] is a string representation of method to call
+      // with parsed params
       return call_user_func_array(
-        array($this, $params['c']),             # callable
-        array_merge(array($params), $arguments) # arguments
+        array($this, $params['c']),             // callable
+        array_merge(array($params), $arguments) // arguments
       );
     }
 
@@ -290,7 +290,7 @@
         ->addGroupBy("{$params['o']}.{$params['rf']}")
       ;
 
-      # In case table with SoftDelete behavior
+      // In case table with SoftDelete behavior
       if (isset($params['s']))
       {
         $q->addWhere("{$params['o']}.{$params['s']} IS NULL");
@@ -321,7 +321,7 @@
         ->addWhere("{$q->getRootAlias()}.{$params['rl']} = {$params['o']}.{$params['rf']}")
       ;
 
-      # In case table with SoftDelete behavior
+      // In case table with SoftDelete behavior
       if (isset($params['s']))
       {
         $subQuery->addWhere("{$params['o']}.{$params['s']} IS NULL");
