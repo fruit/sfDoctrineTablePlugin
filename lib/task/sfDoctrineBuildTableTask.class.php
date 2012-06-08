@@ -116,7 +116,7 @@ EOF;
       {
         if (! class_exists($currentTableClass))
         {
-          $this->logBlock(sprintf('Class "%s" not found.', $currentTableClass), 'ERROR');
+          $this->logBlock(sprintf('Doctrine table class "%s" not found.', $currentTableClass), 'ERROR');
 
           return self::RETURN_TABLE_NOT_FOUND;
         }
@@ -188,17 +188,16 @@ EOF;
         }
       }
 
+      $askQuestion = array(
+        'This command will modify lib/model/doctrine table classes.',
+        'If you are not sure, use VCS or make this folder backup.', '',
+        'Are you sure you want to proceed? (y/N)'
+      );
+
       if (
-        ! $options['no-confirmation']
+          ! $options['no-confirmation']
         &&
-        ! $this->askConfirmation(array_merge(
-          array(
-            'This command will modify lib/model/doctrine table classes.',
-            'If you are not sure, use VCS or make this folder backup.',
-            '',
-            'Are you sure you want to proceed? (y/N)'
-          )
-        ), 'QUESTION_LARGE', false)
+          ! $this->askConfirmation($askQuestion, 'QUESTION_LARGE', false)
       )
       {
         $this->logSection('doctrine', 'task aborted');
@@ -219,7 +218,7 @@ EOF;
       $properties = array();
       $iniFile = sfConfig::get('sf_config_dir') . '/properties.ini';
 
-      if (is_file($iniFile))
+      if (is_file($iniFile) && is_readable($iniFile))
       {
         $properties = parse_ini_file($iniFile, true);
       }
@@ -243,7 +242,7 @@ EOF;
       if (! empty($arguments['name']))
       {
         $baseTableFilenames = array_map(
-          function($modelName) use ($builderOptions) {
+          function ($modelName) use ($builderOptions) {
             return "Base{$modelName}Table{$builderOptions['suffix']}";
           },
           $arguments['name']

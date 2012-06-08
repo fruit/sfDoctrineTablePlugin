@@ -16,6 +16,35 @@
    * @package    symfony
    * @subpackage generator
    * @author     Ilya Sabelnikov <fruit.dev@gmail.com>
+   *
+   * @todo Reorder inheritance for plugin-tables
+   *
+   *    Now:
+   *
+    sfGuardUserTable
+      BasesfGuardUserTable
+        PluginsfGuardUserTable
+          Doctrine_Table_Example
+            Doctrine_Table_Scoped
+              Doctrine_Table
+
+   *    Should be:
+
+    sfGuardUserTable
+      PluginsfGuardUserTable
+        BasesfGuardUserTable
+          Doctrine_Table_Example
+            Doctrine_Table_Scoped
+              Doctrine_Table
+   *
+   * because project tables has same order:
+   *
+      CultureTable
+        BaseCultureTable
+          Doctrine_Table_Example
+            Doctrine_Table_Scoped
+              Doctrine_Table
+
    */
   class sfDoctrineTableGenerator extends sfGenerator
   {
@@ -169,31 +198,51 @@
           continue;
         }
 
-        $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
-
         $isPluginModel = $this->isPluginModel($model);
 
         if ($isPluginModel)
         {
-          $pluginName = $this->getPluginNameForModel($model);
-          $baseDir .= '/' . $pluginName;
+          $baseDir = sfConfig::get('sf_lib_dir') . "/model/doctrine/{$this->getPluginNameForModel($model)}";
+        }
+        else
+        {
+          $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
         }
 
         $baseTableLocation
           = "{$baseDir}/{$this->builderOptions['baseClassesDirectory']}/" .
             "Base{$this->modelName}Table{$this->builderOptions['suffix']}";
 
+        if (is_file($baseTableLocation) && ! is_writable($baseTableLocation))
+        {
+          throw new Exception(sprintf('Base table "%s" is not writeable', $baseTableLocation));
+        }
+
+        if (! is_writable(dirname($baseTableLocation)))
+        {
+          throw new Exception(sprintf('Dirname "%s" is not writeable', dirname($baseTableLocation)));
+        }
 
         $this->methodDocs = array();
         $this->callableDocs = array();
 
         $this->buildRelationPhpdocs($model, $this->params['depth']);
 
-        $data = $this->evalTemplate('sfDoctrineTableGeneratedTemplate.php');
+        if (false === file_put_contents($baseTableLocation, $this->evalTemplate('sfDoctrineTableGeneratedTemplate.php')))
+        {
+          throw new Exception(sprintf('Failed to put content into %s', $baseTableLocation));
+        }
 
-        file_put_contents($baseTableLocation, $data);
+        try
+        {
+          $this->installTable();
+        }
+        catch (Exception $e)
+        {
+          unlink($baseTableLocation);
 
-        $this->installTable();
+          throw new $e;
+        }
       }
     }
 
@@ -867,12 +916,17 @@
 
         $tableLocation = "{$baseDir}/{$this->modelName}Table{$this->builderOptions['suffix']}";
 
-        if (! is_file($tableLocation) || ! is_writable($tableLocation))
+        if (! is_file($tableLocation) || ! is_readable($tableLocation) || ! is_writable($tableLocation))
         {
-          return;
+          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $tableLocation));
         }
 
         $tableContent = file_get_contents($tableLocation);
+
+        if (false === $tableContent)
+        {
+          throw new Exception(sprintf('Failed to get file %s contents', $tableLocation));
+        }
 
         $count = null;
 
@@ -889,7 +943,10 @@
 
         if ($count)
         {
-          file_put_contents($tableLocation, $tableContent);
+          if (false === file_put_contents($tableLocation, $tableContent))
+          {
+            throw new Exception(sprintf('Failed to put contents into %s', $tableLocation));
+          }
         }
       }
       else
@@ -908,21 +965,31 @@
          */
         $pluginTableLocation = sfConfig::get('sf_plugins_dir') . "/{$pluginName}/lib/model/doctrine/{$this->builderOptions['packagesPrefix']}{$this->modelName}Table{$this->builderOptions['suffix']}";
 
-        if (is_file($pluginTableLocation) && is_writable($pluginTableLocation))
+        if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
-          $pluginTableContent = file_get_contents($pluginTableLocation);
+          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
+        }
 
-          $count = null;
+        $pluginTableContent = file_get_contents($pluginTableLocation);
 
-          $pluginTableContent = preg_replace(
-            "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+){$customTableClass}/ms",
-            "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
-            $pluginTableContent, 1, $count
-          );
+        if (false === $pluginTableContent)
+        {
+          throw new Exception(sprintf('Failed to get file %s contents', $pluginTableLocation));
+        }
 
-          if ($count)
+        $count = null;
+
+        $pluginTableContent = preg_replace(
+          "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+){$customTableClass}/ms",
+          "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
+          $pluginTableContent, 1, $count
+        );
+
+        if ($count)
+        {
+          if (false === file_put_contents($pluginTableLocation, $pluginTableContent))
           {
-            file_put_contents($pluginTableLocation, $pluginTableContent);
+            throw new Exception(sprintf('Failed to put content into %s', $pluginTableLocation));
           }
         }
 
@@ -936,21 +1003,30 @@
           "{$baseDir}/{$pluginName}/{$this->modelName}" .
           "Table{$this->builderOptions['suffix']}";
 
-        $defaultTableContent = file_get_contents($defaultTableLocation);
 
-        if (is_file($defaultTableLocation) && is_writable($defaultTableLocation))
+        if (! is_file($defaultTableLocation) || ! is_readable($defaultTableLocation) || ! is_writable($defaultTableLocation))
         {
-          $count = null;
+          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $defaultTableLocation));
+        }
 
-          $defaultTableContent = preg_replace(
-            "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
-            "class\\1{$this->modelName}Table\\2extends\\3{$this->builderOptions['packagesPrefix']}{$this->modelName}Table",
-            $defaultTableContent, 1, $count
-          );
+        if (false === ($defaultTableContent = file_get_contents($defaultTableLocation)))
+        {
+          throw new Exception(sprintf('Failed to get file %s contents', $defaultTableLocation));
+        }
 
-          if ($count)
+        $count = null;
+
+        $defaultTableContent = preg_replace(
+          "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
+          "class\\1{$this->modelName}Table\\2extends\\3{$this->builderOptions['packagesPrefix']}{$this->modelName}Table",
+          $defaultTableContent, 1, $count
+        );
+
+        if ($count)
+        {
+          if (false === file_put_contents($defaultTableLocation, $defaultTableContent))
           {
-            file_put_contents($defaultTableLocation, $defaultTableContent);
+            throw new Exception(sprintf('Failed to put content into %s', $defaultTableLocation));
           }
         }
       }
@@ -969,10 +1045,18 @@
         $this->builderOptions['suffix']
       );
 
-      if (is_file($baseTableLocation))
+      if (! is_file($baseTableLocation))
       {
-        unlink($baseTableLocation);
+        // Base table can be already removed, or model with "table: false"
+        return;
       }
+
+      if (! is_writable($baseTableLocation))
+      {
+        throw new Exception(sprintf('Base table file %s is not writable', $baseTableLocation));
+      }
+
+      unlink($baseTableLocation);
     }
 
     /**
@@ -993,38 +1077,50 @@
          */
         $tableLocation = "{$baseDir}/{$this->modelName}Table{$this->builderOptions['suffix']}";
 
-        if (is_file($tableLocation) && is_writable($tableLocation))
+        if (! is_file($tableLocation) || ! is_readable($tableLocation) || !is_writable($tableLocation))
         {
-          $tableClassContent = file_get_contents($tableLocation);
+          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $tableLocation));
+        }
 
+        $tableClassContent = file_get_contents($tableLocation);
+
+        if (false === $tableClassContent)
+        {
+          throw new Exception(sprintf('Failed to get file %s contents', $tableLocation));
+        }
+
+        /**
+         * replace invalid PHPDoc with correct
+         * from:
+         *    @return object PostTable
+         * to:
+         *    @return PostTable
+         */
+
+        if (preg_match("/@return\s+object\s+{$this->modelName}Table\s/ms", $tableClassContent))
+        {
+          $tableClassContent = preg_replace(
+            "/@return(\s+)object(\s+){$this->modelName}Table/ms",
+            "@return\\1{$this->modelName}Table",
+            $tableClassContent, 1
+          );
+        }
+
+        if (! preg_match("/class\s+{$this->modelName}Table\s+extends\s+Base{$this->modelName}Table/ms", $tableClassContent))
+        {
           /**
-           * replace invalid PHPDoc with correct
-           * from:
-           *    @return object PostTable
-           * to:
-           *    @return PostTable
+           * Keep code formatting
            */
+          $tableClassContent = preg_replace(
+            "/class(\s+){$this->modelName}Table(\s+)extends(\s+)\w+/ms",
+            "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
+            $tableClassContent, 1
+          );
+        }
 
-          if (preg_match("/@return\s+object\s+{$this->modelName}Table\s/ms", $tableClassContent))
-          {
-            $tableClassContent = preg_replace("/@return(\s+)object(\s+){$this->modelName}Table/ms", "@return\\1{$this->modelName}Table", $tableClassContent, 1, $count);
-          }
-
-          if (! preg_match("/class\s+{$this->modelName}Table\s+extends\s+Base{$this->modelName}Table/ms", $tableClassContent))
-          {
-            $count = null;
-
-            /**
-             * Keep code formatting
-             */
-            $tableClassContent = preg_replace(
-              "/class(\s+){$this->modelName}Table(\s+)extends(\s+)\w+/ms",
-              "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
-              $tableClassContent, 1, $count
-            );
-          }
-
-          file_put_contents($tableLocation, $tableClassContent);
+        if (false === file_put_contents($tableLocation, $tableClassContent))
+        {
+          throw new Exception(sprintf('Failed to put content into %s', $tableLocation));
         }
       }
       else
@@ -1052,36 +1148,46 @@
          */
         $pluginTableLocation =
           sfConfig::get('sf_plugins_dir') .
-          "/{$pluginName}/lib/model/doctrine/" .
-          "{$this->builderOptions['packagesPrefix']}{$this->modelName}" .
+          "/{$pluginName}/lib/model/doctrine" .
+          "/{$this->builderOptions['packagesPrefix']}{$this->modelName}" .
           "Table{$this->builderOptions['suffix']}";
 
-        if (is_file($pluginTableLocation) && is_writable($pluginTableLocation))
+        if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
-          $pluginTableContent = file_get_contents($pluginTableLocation);
+          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
+        }
 
-          /**
-           * Hard to find extends class - it could be custom, or Doctrine_Table
-           */
+        $pluginTableContent = file_get_contents($pluginTableLocation);
 
-          $defaultTableClass = Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
+        if (false === $pluginTableContent)
+        {
+          throw new Exception(sprintf('Failed to get file %s contents', $pluginTableLocation));
+        }
 
-          /**
-           * Keep code formatting
-           *
-           * And I know, it's not good to change plugins files :)
-           */
-          $count = null;
+        /**
+         * Hard to find extends class - it could be custom, or Doctrine_Table
+         */
 
-          $pluginTableContent = preg_replace(
-            "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)\w+/ms",
-            "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$defaultTableClass}",
-            $pluginTableContent, 1, $count
-          );
+        $defaultTableClass = Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
 
-          if ($count)
+        /**
+         * Keep code formatting
+         *
+         * And I know, it's not good to change plugins files :)
+         */
+        $count = null;
+
+        $pluginTableContent = preg_replace(
+          "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)\w+/ms",
+          "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$defaultTableClass}",
+          $pluginTableContent, 1, $count
+        );
+
+        if ($count)
+        {
+          if (false === file_put_contents($pluginTableLocation, $pluginTableContent))
           {
-            file_put_contents($pluginTableLocation, $pluginTableContent);
+            throw new Exception(sprintf('Failed to put content into %s', $pluginTableLocation));
           }
         }
 
@@ -1089,44 +1195,50 @@
          * File #2
          */
         $baseTableLocation = "{$baseDir}/{$pluginName}/{$this->modelName}Table{$this->builderOptions['suffix']}";
-        if (is_file($baseTableLocation) && is_writable($baseTableLocation))
+
+        if (! is_file($baseTableLocation) || ! is_readable($baseTableLocation) || ! is_writable($baseTableLocation))
         {
-          $baseTableContent = file_get_contents($baseTableLocation);
+          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $baseTableLocation));
+        }
+
+        $baseTableContent = file_get_contents($baseTableLocation);
+
+        /**
+         * replace invalid PHPDoc with correct
+         * from:
+         *    [at]return object sfGuardUserTable
+         * to:
+         *    [at]return sfGuardUserTable
+         */
+
+        if (preg_match("/\@return\s+object\s+{$this->modelName}Table/ms", $baseTableContent))
+        {
+          $baseTableContent = preg_replace(
+            "/\@return(\s+)object(\s+){$this->modelName}Table/ms",
+            "@return\\1{$this->modelName}Table",
+            $baseTableContent,
+            1,
+            $count
+          );
+        }
+
+        if (! preg_match("/class\s+{$this->modelName}Table\s+extends\s+Base{$this->modelName}Table/ms", $baseTableContent))
+        {
+          $count = null;
 
           /**
-           * replace invalid PHPDoc with correct
-           * from:
-           *    [at]return object sfGuardUserTable
-           * to:
-           *    [at]return sfGuardUserTable
+           * Keep code formatting
            */
+          $baseTableContent = preg_replace(
+            "/class(\s+){$this->modelName}Table(\s+)extends(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table/ms",
+            "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
+            $baseTableContent, 1, $count
+          );
+        }
 
-          if (preg_match("/\@return\s+object\s+{$this->modelName}Table/ms", $baseTableContent))
-          {
-            $baseTableContent = preg_replace(
-              "/\@return(\s+)object(\s+){$this->modelName}Table/ms",
-              "@return\\1{$this->modelName}Table",
-              $baseTableContent,
-              1,
-              $count
-            );
-          }
-
-          if (! preg_match("/class\s+{$this->modelName}Table\s+extends\s+Base{$this->modelName}Table/ms", $baseTableContent))
-          {
-            $count = null;
-
-            /**
-             * Keep code formatting
-             */
-            $baseTableContent = preg_replace(
-              "/class(\s+){$this->modelName}Table(\s+)extends(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table/ms",
-              "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
-              $baseTableContent, 1, $count
-            );
-          }
-
-          file_put_contents($baseTableLocation, $baseTableContent);
+        if (false === file_put_contents($baseTableLocation, $baseTableContent))
+        {
+          throw new Exception(sprintf('Failed to put content into %s', $baseTableLocation));
         }
       }
     }
