@@ -24,7 +24,7 @@
   $t->diag('Executing: ./symfony doctrine:build-table --uninstall --env=test --no-confirmation');
   $returnCode = $task->run(array(), array('uninstall' => true, 'env' => 'test', 'no-confirmation' => true));
 
-  if (0 != $returnCode)
+  if (sfDoctrineBuildTableTask::RETURN_SUCCESS != $returnCode)
   {
     $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
     return;

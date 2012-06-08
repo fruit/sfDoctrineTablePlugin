@@ -49,7 +49,7 @@
   $t->diag('Executing: ./symfony doctrine:build-table --depth=2 --env=test --minified --no-confirmation');
   $returnCode = $task->run(array(), array('depth' => 2, 'env' => 'test', 'minified' => true, 'no-confirmation' => true));
 
-  if (0 != $returnCode)
+  if (sfDoctrineBuildTableTask::RETURN_SUCCESS != $returnCode)
   {
     $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
     return;
@@ -102,7 +102,7 @@
   $t->diag('Executing: ./symfony doctrine:build-table --depth=2 --env=test --no-phpdoc --minified --no-confirmation');
   $returnCode = $task->run(array(), array('depth' => 2, 'env' => 'test', 'minified' => true, 'no-phpdoc' => true, 'no-confirmation' => true));
 
-  if (0 != $returnCode)
+  if (sfDoctrineBuildTableTask::RETURN_SUCCESS != $returnCode)
   {
     $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
     return;

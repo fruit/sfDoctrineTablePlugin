@@ -1,5 +1,5 @@
 all:
-  sf_doctrine_table_plugin:
+  sfDoctrineTablePlugin:
     custom_table_class: Doctrine_Table_Scoped
     finder_search_in:
       - %SF_APPS_DIR%

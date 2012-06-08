@@ -1168,11 +1168,11 @@
     {
       $files = sfFinder::type('file')
         ->ignore_version_control()
-        ->prune(sfConfig::get('app_sf_doctrine_table_plugin_finder_prune_folders'))
-        ->discard(sfConfig::get('app_sf_doctrine_table_plugin_finder_discard_folders'))
-        ->name(sfConfig::get('app_sf_doctrine_table_plugin_finder_name'))
-        ->not_name(sfConfig::get('app_sf_doctrine_table_plugin_finder_not_name'))
-        ->in(sfConfig::get('app_sf_doctrine_table_plugin_finder_search_in'))
+        ->prune(sfConfig::get('app_sfDoctrineTablePlugin_finder_prune_folders'))
+        ->discard(sfConfig::get('app_sfDoctrineTablePlugin_finder_discard_folders'))
+        ->name(sfConfig::get('app_sfDoctrineTablePlugin_finder_name'))
+        ->not_name(sfConfig::get('app_sfDoctrineTablePlugin_finder_not_name'))
+        ->in(sfConfig::get('app_sfDoctrineTablePlugin_finder_search_in'))
       ;
 
       $re = '/

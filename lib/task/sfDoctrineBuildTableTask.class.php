@@ -17,6 +17,14 @@
    */
   class sfDoctrineBuildTableTask extends sfDoctrineBaseTask
   {
+    const
+      RETURN_SUCCESS              = 0,
+      RETURN_INVALID_DEPTH        = 1,
+      RETURN_MODEL_NOT_FOUND      = 2,
+      RETURN_TABLE_NOT_FOUND      = 3,
+      RETURN_GENERATOR_NOT_FOUND  = 4,
+      RETURN_TABLE_INHERITANCE    = 5;
+
     /**
      * @see sfTask
      */
@@ -44,7 +52,7 @@
         new sfCommandOption('uninstall', null, sfCommandOption::PARAMETER_NONE,
           'Cleans generated base model tables, and reverts its content to default'
         ),
-        new sfCommandOption('no-confirmation', 'y', sfCommandOption::PARAMETER_NONE,
+        new sfCommandOption('no-confirmation', 'f', sfCommandOption::PARAMETER_NONE,
           'Whether to force modifing the generated model classes within lib/model/doctrine'
         ),
       ));
@@ -90,7 +98,7 @@ When you deside to stop using plugin, uninstall it by passing [--uninstall|COMME
     [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --uninstall|INFO]
 
 Sometimes it's necessary to skip confirmation dialogs automatically with positive answer.
-For such cases use the [--no-confirmation|COMMENT]/[-y|COMMENT] flag:
+For such cases use the [--no-confirmation|COMMENT]/[-f|COMMENT] flag:
 
     [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --depth=2 --no-confirmation|INFO]
 
@@ -99,7 +107,6 @@ EOF;
 
     protected function execute ($arguments = array(), $options = array())
     {
-
       $manager = Doctrine_Manager::getInstance();
 
       $currentTableClass = $manager->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
@@ -111,7 +118,7 @@ EOF;
         {
           $this->logBlock(sprintf('Class "%s" not found.', $currentTableClass), 'ERROR');
 
-          return 4;
+          return self::RETURN_TABLE_NOT_FOUND;
         }
 
         if ('Doctrine_Table' === $currentTableClass)
@@ -127,7 +134,7 @@ EOF;
               $currentTableClass, $defaultTableClass
             ), 'ERROR');
 
-            return 5;
+            return self::RETURN_TABLE_INHERITANCE;
           }
 
           $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, $currentTableClass);
@@ -140,7 +147,7 @@ EOF;
       {
         $this->logBlock('Value --depth is a number from 1 to N', 'ERROR');
 
-        return 1;
+        return self::RETURN_INVALID_DEPTH;
       }
 
       if (! class_exists($options['generator-class']))
@@ -153,7 +160,7 @@ EOF;
           'ERROR'
         );
 
-        return 2;
+        return self::RETURN_GENERATOR_NOT_FOUND;
       }
 
       $databaseManager = new sfDatabaseManager($this->configuration);
@@ -177,7 +184,7 @@ EOF;
             'ERROR'
           );
 
-          return 3;
+          return self::RETURN_MODEL_NOT_FOUND;
         }
       }
 
@@ -196,7 +203,7 @@ EOF;
       {
         $this->logSection('doctrine', 'task aborted');
 
-        return 0;
+        return self::RETURN_SUCCESS;
       }
 
       $generatorManager = new sfGeneratorManager($this->configuration);
@@ -258,6 +265,6 @@ EOF;
 
       $this->reloadAutoload();
 
-      return 0;
+      return self::RETURN_SUCCESS;
     }
   }

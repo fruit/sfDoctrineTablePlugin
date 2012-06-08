@@ -37,7 +37,7 @@
   $t->diag('Executing: ./symfony doctrine:build-table --depth=1 --env=test --generator-class=TestTableGenerator --no-confirmation');
   $returnCode = $task->run(array(), array('depth' => 1, 'env' => 'test', 'generator-class' => 'TestTableGenerator', 'no-confirmation' => true));
 
-  if (0 != $returnCode)
+  if (sfDoctrineBuildTableTask::RETURN_SUCCESS != $returnCode)
   {
     $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
     return;
@@ -77,7 +77,7 @@
   $t->diag('Executing: ./symfony doctrine:build-table --depth=3 --env=test --no-confirmation');
   $returnCode = $task->run(array(), array('depth' => 3, 'env' => 'test', 'no-confirmation' => true));
 
-  if (0 != $returnCode)
+  if (sfDoctrineBuildTableTask::RETURN_SUCCESS != $returnCode)
   {
     $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
     return;

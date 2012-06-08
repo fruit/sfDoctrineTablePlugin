@@ -19,12 +19,16 @@
 
   $t->diag('Executing: ./symfony doctrine:build-table --depth=0 --env=test --no-confirmation');
   $returnCode = $task->run(array(), array('depth' => 0, 'env' => 'test', 'no-confirmation' => true));
-  $t->is($returnCode, 1, 'Depth can\'t be zero 0');
+  $t->is($returnCode, sfDoctrineBuildTableTask::RETURN_INVALID_DEPTH, 'Depth can\'t be zero 0');
 
   $t->diag('Executing: ./symfony doctrine:build-table --depth=2 --generator-class=TestTableGenerator --env=test --no-confirmation');
   $returnCode = $task->run(array(), array('depth' => 2, 'env' => 'test', 'no-confirmation' => true,  'generator-class' => 'FakeTableGenerator'));
-  $t->is($returnCode, 2, 'Generator class exist');
+  $t->is($returnCode, sfDoctrineBuildTableTask::RETURN_GENERATOR_NOT_FOUND, 'Generator class exist');
 
   $t->diag('Executing: ./symfony doctrine:build-table Culture Vehicle --depth=1 --env=test --no-confirmation');
   $returnCode = $task->run(array('Culture', 'Vehicle'), array('depth' => 1, 'env' => 'test', 'no-confirmation' => true));
-  $t->is($returnCode, 3, 'Vehicle model isn\'t defined in schema YML');
+  $t->is($returnCode, sfDoctrineBuildTableTask::RETURN_MODEL_NOT_FOUND, 'Vehicle model isn\'t defined in schema YML');
+
+  /**
+   * @todo add 2 tests to check remaining RETURN_* codes
+   */

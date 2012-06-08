@@ -1,10 +1,10 @@
 # sfDoctrineTablePlugin
 
-The ``sfDoctrineTablePlugin`` generates feature packed base tables to each model.
+The ``sfDoctrineTablePlugin`` generates feature packed base tables for models.
 Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT``
-and ``JOIN`` considering table relations and its depth. List of new available
-methods are accessed through the PHPDoc tag @method and are suitable for IDE
-users only (prefect implementation in [NetBeans 7.2](http://netbeans.org/downloads/index.html "NetBeans Download page"))
+and ``JOIN`` methods, considering table relations and its depth. List of pre-generated PHPDoc
+methods are accessed through the tag @method and are suitable for IDE
+users only (perfect implementation in [NetBeans 7.2](http://netbeans.org/downloads/index.html "NetBeans Download page"))
 
 # Table of contents
 
@@ -13,20 +13,12 @@ users only (prefect implementation in [NetBeans 7.2](http://netbeans.org/downloa
  1. <a href="#install">Installation</a>
  1. <a href="#uninstall">Uninstallation</a>
  1. <a href="#setup">Setup</a>
-   1. <a href="#h5_1">Check plugin is enabled</a>
-   1. <a href="#h5_2">Configure</a>
-     1. <a href="#h5_2_1">Plugin</a>
-     1. <a href="#h5_2_2">Model</a>
-   1. <a href="#h5_3">Execute task</a>
-     1. <a href="#h5_3_1">Usage</a>
-     1. <a href="#h5_3_2">Build base tables</a>
-     1. <a href="#h5_3_3">Customize JOIN's deepness</a>
-     1. <a href="#h5_3_4">Optimize tables for production</a>
-   1. <a href="#h5_4">Turning off base table generation for specific models</a>
-   1. <a href="#h5_5">Base tables generation for a specific models</a>
+ 1. <a href="#task">Task</a>
  1. <a href="#how">How it works</a>
+ 1. <a href="#extend">Extending the generator</a>
  1. <a href="#problem">Known problem</a>
  1. <a href="#tdd">TDD</a>
+ 1. <a href="#misc">Misc</a>
 
 # 1. <a id="desc">Description</a>
 
@@ -34,7 +26,7 @@ Plugin helps you not to keep in mind table relation aliases and escape from the
 constructing left and/or inner joins.
 It gives you ability to use pre-generated methods with IDE code-completion
 to speed-up your coding. Also, you can easy add your owns methods to the generator's
-template by extending it.
+template by extending it (see <a href="#extend">8. Extending the generator</a>).
 
 # 2. <a id="screenshot">Screenshot</a>
 
@@ -75,9 +67,8 @@ _Upgrading_
 
     ./symfony doctrine:build-table --uninstall
 
-  In case, you have your own ``Doctrine_Table`` class
-  (e.g. ``Doctrine_Table_Advanced``), you need to replace inherited
-  class ``Doctrine_Table_Scoped`` with ``Doctrine_Table_Advanced``.
+  In case, you had your own-custom table class (e.g. ``My_Doctrine_Table``),
+  you need to revert back it inherited by ``Doctrine_Table``.
 
   Then usual uninstallation process:
 
@@ -107,12 +98,16 @@ _Upgrading_
 
 ### 5.2.1 <a id="h5_2_1">Plugin</a>
 
-    all:
-      sf_doctrine_table_plugin:
+  In case you have your own-custom Doctrine_Table class (e.g. ``My_Doctrine_Table``), then you
+  need to make it inherited from class ``Doctrine_Table_Scoped``, not from ``Doctrine_Table`` class.
 
-        # Extended by plugin class Doctrine_Table
-        # (default: Doctrine_Table_Scoped)
-        custom_table_class:   Doctrine_Table_Scoped
+  Here is the default plugin configuration. All configuration options are used to
+  find all PHP files where you keep a business logic.
+
+    [yaml]
+    ---
+    all:
+      sfDoctrineTablePlugin:
 
         # Given below finder_* options used to find which methods
         # are used in your project and further remove then in production environment
@@ -133,31 +128,13 @@ _Upgrading_
         # List of filenames to skip
         finder_not_name: []
 
-  Use case: You have extended by yourself class ``Doctrine_Table`` and name it
-  ``Doctrine_Table_Advanced``, thus plugin configuration should looks like:
-
-    all:
-      sf_doctrine_table_plugin:
-        custom_table_class: Doctrine_Table_Advanced
-
-  Also, class ``Doctrine_Table_Advanced`` should be extended from
-  ``Doctrine_Table_Scoped`` - that's all
-
-    [php]
-    <?php
-
-    class Doctrine_Table_Advanced extends Doctrine_Table_Scoped
-    {
-      // ...
-    }
-
 ### 5.2.1 <a id="h5_2_2">Model</a>
 
   By default base tables will be generated to all models and to all enabled
   plugins that contains schema files. Occasionally, you won't use
   all models to query its data, some of them will be used to save data. In
-  such cases is reasonable to disable the base tables generation. How to do that
-  please refer to <a href="#h5_4">5.4. Turning off base table generation for
+  such cases is reasonable to disable them from generating it. How to do that
+  please refer to <a href="#h6_5">6.5. Turning off base table generation for
   specific models</a>.
 
   According to my own experience, the most profit you will get in case you disable
@@ -167,6 +144,8 @@ _Upgrading_
 
   Here is small ``schema.yml`` example:
 
+    [yaml]
+    ---
     detect_relations: false
 
     Country:
@@ -207,7 +186,6 @@ _Upgrading_
   The generated SQL (``$q->getSqlQuery()``) will looks like:
 
     [sql]
-
     SELECT
       c.id AS c__id, c.country_id AS c__country_id, c.title AS c__title,
       c2.id AS c2__id, c2.capital_city_id AS c2__capital_city_id, c2.title AS c2__title,
@@ -220,36 +198,38 @@ _Upgrading_
 
   And here is DQL (``$q->getDql()``) will looks like:
 
-     FROM City ci
+    [sql]
+    FROM City ci
       INNER JOIN ci.Country c
       LEFT JOIN c.Capital c_c
       LEFT JOIN c_c.CapitalOfTheCountry c_c_cotc
 
 
-## 5.3. <a id="h5_3">Execute task</a>
+# 6. <a id="task">Task</a>
 
-### 5.3.1 <a id="h5_3_1">Usage</a>
+## 6.1 <a id="h6_1">Usage</a>
 
-    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--generator-class="..."] [-m|--minified] [-n|--no-phpdoc] [--uninstall] [-y|--no-confirmation] [name1] ... [nameN]
+    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--generator-class="..."] [-m|--minified] [-n|--no-phpdoc] [--uninstall] [-f|--no-confirmation] [name1] ... [nameN]
 
   For full task details, please refer to the task help block:
 
     ./symfony help doctrine:build-table
 
-### 5.3.2 <a id="h5_3_2">Build base tables</a>
+## 6.2 <a id="h6_2">Build base tables</a>
 
   Run this task each time you update the schema.yml and rebuild models:
 
     ./symfony doctrine:build-table
 
-### 5.3.3 <a id="h5_3_3">Customize JOIN's deepness</a>
+## 6.3 <a id="h6_3">Customize JOIN's deepness</a>
 
   By default JOINs deepness is 3 (superfluously enough), but you can adjust it
-  by passing flag ``--depth``:
+  by passing flag ``--depth``. The level of depth does not affects on speed
+  in production environment (see <a id="#h6_4">Optimize tables for production</a>):
 
     ./symfony doctrine:build-table --depth=4
 
-### 5.3.4 <a id="h5_3_4">Optimize tables for production</a>
+## 6.4 <a id="h6_4">Optimize tables for production</a>
 
   When you deploy your code to production you need to minimize generated base
   table class file size by passing flag ``--no-phpdoc`` (e.i. base tables without
@@ -257,12 +237,14 @@ _Upgrading_
 
     ./symfony doctrine:build-table --env=prod --minified --no-phpdoc
 
-## 5.4. <a id="h5_4">Turning off base table generation for specific models</a>
+## 6.5. <a id="h6_5">Turning off base table generation for specific models</a>
 
   By default task ``doctrine:build-model`` will generate base tables for each
   existing model, unless you disable it. To disable it you need to add option
   ``table: false`` to the specific model schema.yml:
 
+    [yaml]
+    ---
     Book:
       options:
         symfony: { table: false }
@@ -278,12 +260,9 @@ _Upgrading_
   There are some nuances to know. When you disable model(-s), which base table(-s) was generated before,
   task ``doctrine:build-table`` will uninstall disabled base table automatically.
 
-## 5.5. <a id="h5_5">Base tables generation for a specific models</a>
+## 6.6. <a id="h6_6">Base tables generation for a specific models</a>
 
   Now you can pass manually a list of models you would like to generate base tables
-  (NOTE: table generation should not be turned off - see
-  <a href="#h5_4">5.4. Turning off base table generation for specific models</a> for
-  more information)
 
     ./symfony doctrine:build-table City Country
 
@@ -291,7 +270,7 @@ _Upgrading_
 
     ./symfony doctrine:build-table --uninstall City Country
 
-# 6. <a id="how">How it works</a>
+# 7. <a id="how">How it works</a>
 
   All is very tricky. Each available method for code-completion does not contains code at all.
   That is - no extra code, smallest file size. Things are done by implementing ``PHPDoc`` directive @method.
@@ -299,20 +278,42 @@ _Upgrading_
   Here is code sample of generated base table for model City - file ``BaseCityTable.class.php``
   preview on [http://pastie.org/private/qhlsjqlxxzohe0r0jfpew](http://pastie.org/private/qhlsjqlxxzohe0r0jfpew "Preview")
 
-  As you could observe, additionally PHPDoc contains ``@c`` directives:
+  As you can observe, file contains additional ``@c`` directives:
 
-    * ...
-    * @c(m=withLeftJoinOnSection,o=s,f=^,ra=Section,c=buildLeft)
-    * @c(m=withInnerJoinOnSection,o=s,f=^,ra=Section,c=buildInner)
-    * ...
-    * @c(m=withLeftJoinOnPostMediaImageViaImagesAndTranslations,o=is_ts_pmi,f=is_ts,ra=PostMediaImage,c=buildLeft)
-    * @c(m=withInnerJoinOnPostMediaImageViaImagesAndTranslations,o=is_ts_pmi,f=is_ts,ra=PostMediaImage,c=buildInner)
-    * ...
+    [php]
+    <?php
 
-  This information helps to build requested method on the fly by implementing magic method ``__call``.
-  This works pretty fast even base table class size is about 300kb.
+    /**
+     * ...
+     * @c(m=withLeftJoinOnSection,o=s,f=^,ra=Section,c=buildLeft)
+     * @c(m=withInnerJoinOnSection,o=s,f=^,ra=Section,c=buildInner)
+     * ...
+     * @c(m=withLeftJoinOnPostMediaImageViaImagesAndTranslations,o=is_ts_pmi,f=is_ts,ra=PostMediaImage,c=buildLeft)
+     * @c(m=withInnerJoinOnPostMediaImageViaImagesAndTranslations,o=is_ts_pmi,f=is_ts,ra=PostMediaImage,c=buildInner)
+     * ...
+     **/
 
-# 7. <a id="problem">Known problem</a>
+  This information helps to build requested method on the fly by implementing magic
+  method ``__call``. Parsing PHPDoc on the fly is fast (&lt; 0.003 sec) even the
+  base table is not minified and contains @method hints (about 700kb).
+
+  Minified base tables (see <a id="#h6_4">Optimize tables for production</a>) are much smaller (about &lt; 4kb) and
+  parsing is much faster (&lt; 0.0001 sec).
+
+# 8. <a id="extend">Extending the generator</a>
+
+  Copy default generator skeleton folder to your project:
+
+    cp -a plugins/sfDoctrineTablePlugin/data/generator/ data/.
+
+  Create new generator class (e.g. ``MyDoctrineTableGenerator``) by extending it from ``sfDoctrineTableGenerator``.
+  And use it when you run ``doctrine:build-table`` task by passing ``--generator-class`` option:
+
+    ./symfony doctrine:build-table --depth=2 --generator-class=MyDoctrineTableGenerator
+
+  That's all.
+
+# 9. <a id="problem">Known problem</a>
 
   Joined table aliases may change when existing relation is removed or new relations are added
 before existing one.
@@ -321,6 +322,7 @@ before existing one.
   For example model owns 2 relations Company and Category:
 
     [yaml]
+    ---
     Article:
       relations:
         Company:
@@ -367,9 +369,9 @@ before existing one.
 
     $q->select('a.*, c.slug')->execute();
 
-  If anybody could help me to elegantly solve this issue - I will be pleasantly thankful.
+  If anybody can help me to elegantly solve this issue - I will be pleasantly thankful.
 
-# 8. <a id="tdd">TDD</a>
+# 10. <a id="tdd">TDD</a>
 
   Tested basic functionality.
 
@@ -384,3 +386,14 @@ before existing one.
     [sfDoctrineTable] functional/backend/TaskUninstallTest...............ok
      All tests successful.
      Files=7, Tests=140
+
+# 11. <a id="misc">Misc</a>
+
+## Requirements
+
+  * PHP >= 5.3.* (because of [Late Static Bindings](http://php.net/manual/en/language.oop5.late-static-bindings.php "About Late Static Bindings on php.net"))
+
+## Contacts ##
+
+  * @: Ilya Sabelnikov `` <fruit dot dev at gmail dot com> ``
+  * skype: ilya_roll

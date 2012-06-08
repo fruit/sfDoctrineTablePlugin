@@ -17,7 +17,7 @@
   $t->diag('Executing: ./symfony doctrine:build-table --depth=3 --no-confirmation --env=test');
   $returnCode = $task->run(array(), array('depth' => 3, 'no-confirmation' => true, 'env' => 'test'));
 
-  if (0 != $returnCode)
+  if (sfDoctrineBuildTableTask::RETURN_SUCCESS != $returnCode)
   {
     $t->fail(sprintf("Failed to run task. Return code is %s", $returnCode));
     return;
