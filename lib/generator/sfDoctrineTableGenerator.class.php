@@ -16,35 +16,6 @@
    * @package    symfony
    * @subpackage generator
    * @author     Ilya Sabelnikov <fruit.dev@gmail.com>
-   *
-   * @todo Reorder inheritance for plugin-tables
-   *
-   *    Now:
-   *
-    sfGuardUserTable
-      BasesfGuardUserTable
-        PluginsfGuardUserTable
-          Doctrine_Table_Example
-            Doctrine_Table_Scoped
-              Doctrine_Table
-
-   *    Should be:
-
-    sfGuardUserTable
-      PluginsfGuardUserTable
-        BasesfGuardUserTable
-          Doctrine_Table_Example
-            Doctrine_Table_Scoped
-              Doctrine_Table
-   *
-   * because project tables has same order:
-   *
-      CultureTable
-        BaseCultureTable
-          Doctrine_Table_Example
-            Doctrine_Table_Scoped
-              Doctrine_Table
-
    */
   class sfDoctrineTableGenerator extends sfGenerator
   {
@@ -380,9 +351,7 @@
     {
       foreach ($models as $key => $model)
       {
-        /**
-         * Skip Translation tables
-         */
+        // Skip Translation tables
         if (Doctrine_Core::getTable($model)->isGenerator())
         {
           unset($models[$key]);
@@ -445,16 +414,6 @@
      */
     public function getTableToExtendFrom()
     {
-      $pluginName = $this->getPluginNameForModel($this->modelName);
-
-      /**
-       * Plugin model base tables should be extended by it's own base table
-       */
-      if ($pluginName)
-      {
-        return "{$this->builderOptions['packagesPrefix']}{$this->modelName}Table";
-      }
-
       $baseClasses = array(
         'Doctrine_Record',
         'sfDoctrineRecord',
@@ -547,9 +506,7 @@
 
         $position = 1;
 
-        /**
-         * do not dublicate alias inside joins
-         */
+        // do not dublicate alias inside joins
         do
         {
           $tmpName = ucfirst($relation->getAlias());
@@ -569,11 +526,9 @@
 
         $levelAliases[$aliasOn] = true;
 
-        /**
-         * Do not use $table->hasTemplate('I18n') to check whether it's time
-         * to generate translation joins - produces invalid aliases when has
-         * many i18n-relations. Hard to catch.
-         */
+        // Do not use $table->hasTemplate('I18n') to check whether it's time
+        // to generate translation joins - produces invalid aliases when has
+        // many i18n-relations. Hard to catch.
         if ('Translation' == $relation->getAlias())
         {
           $this->callableDocs[$m] = $this->inline(array(
@@ -618,7 +573,7 @@
         elseif (
             ! $relation->isOneToOne()
           &&
-            ('^' == $aliasFrom)
+            '^' == $aliasFrom
           &&
             null == $relation->offsetGet('refTable')
         )
@@ -638,9 +593,7 @@
             $getDql['s'] = $relation->getTable()->getTemplate('SoftDelete')->getOption('name');
           }
 
-          /**
-           * Joins
-           */
+          // Joins
           $this->callableDocs[$m] = $this->inline(
             array_merge(
               array(
@@ -658,9 +611,7 @@
             'relationColumn'  => $getDql['rf'],
           );
 
-          /**
-           * Sub-Select
-           */
+          // Sub-Select
           $this->callableDocs[$m] = $this->inline(
             array_merge(
               array(
@@ -814,7 +765,7 @@
     /**
      * List of methods and its parameters that was generated based on pattern
      *
-     * @return array
+     * @return array  An array of methods to render as @c annotation
      */
     public function getCallableDocs ()
     {
@@ -904,16 +855,11 @@
     protected function uninstallTable ()
     {
       $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
-      $customTableClass = Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
 
       if (! $this->isPluginModel($this->modelName))
       {
-        /**
-         * 1 file to update
-         *
-         *   #1 - lib/model/doctrine/MyModuleTable.class.php
-         */
-
+        // 1 file to update
+        // (E.g. lib/model/doctrine/MyModuleTable.class.php)
         $tableLocation = "{$baseDir}/{$this->modelName}Table{$this->builderOptions['suffix']}";
 
         if (! is_file($tableLocation) || ! is_readable($tableLocation) || ! is_writable($tableLocation))
@@ -930,11 +876,9 @@
 
         $count = null;
 
-        /**
-         * If previously "extends" class was not Doctrine_Table?
-         * Leave Doctrine_Table, in README is described uninstallation process
-         * (build-models should be executed)
-         */
+        // If previously "extends" class was not Doctrine_Table?
+        // Leave Doctrine_Table, in README is described uninstallation process
+        // (build-models should be executed)
         $tableContent = preg_replace(
           "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
           "class\\1{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
@@ -951,19 +895,20 @@
       }
       else
       {
-        /**
-         * There are two files to update
-         */
-
+        // There are two files to update
         $pluginName = $this->getPluginNameForModel($this->modelName);
 
-        /**
-         * File #1 - plugins table
-         *
-         * Text to replace: class PluginsfGuardUserTable extends Doctrine_Table_Scoped
-         *            with: class PluginsfGuardUserTable extends Doctrine_Table
-         */
-        $pluginTableLocation = sfConfig::get('sf_plugins_dir') . "/{$pluginName}/lib/model/doctrine/{$this->builderOptions['packagesPrefix']}{$this->modelName}Table{$this->builderOptions['suffix']}";
+        // File #1 - plugins table
+        //    Text to replace: class PluginsfGuardUserTable extends BasesfGuardUserTable
+        //               with: class PluginsfGuardUserTable extends Doctrine_Core::ATTR_TABLE_CLASS
+
+        // (E.g `pwd`/plugins/sfDoctineGuardPlugin/lib/model/doctrine/PluginMyModuleTable.class.php)
+        $pluginTableLocation = sfConfig::get('sf_plugins_dir')
+                             . "/{$pluginName}/lib/model/doctrine/"
+                             . $this->builderOptions['packagesPrefix']
+                             . "{$this->modelName}Table"
+                             . $this->builderOptions['suffix']
+        ;
 
         if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
@@ -980,7 +925,7 @@
         $count = null;
 
         $pluginTableContent = preg_replace(
-          "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+){$customTableClass}/ms",
+          "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
           "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
           $pluginTableContent, 1, $count
         );
@@ -992,61 +937,22 @@
             throw new Exception(sprintf('Failed to put content into %s', $pluginTableLocation));
           }
         }
-
-        /**
-         * File #2 - default table class
-         *
-         * Text to replace: "class sfGuardUserTable extends BasesfGuardUserTable"
-         *            with: "class sfGuardUserTable extends PluginsfGuardUserTable"
-         */
-        $defaultTableLocation =
-          "{$baseDir}/{$pluginName}/{$this->modelName}" .
-          "Table{$this->builderOptions['suffix']}";
-
-
-        if (! is_file($defaultTableLocation) || ! is_readable($defaultTableLocation) || ! is_writable($defaultTableLocation))
-        {
-          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $defaultTableLocation));
-        }
-
-        if (false === ($defaultTableContent = file_get_contents($defaultTableLocation)))
-        {
-          throw new Exception(sprintf('Failed to get file %s contents', $defaultTableLocation));
-        }
-
-        $count = null;
-
-        $defaultTableContent = preg_replace(
-          "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
-          "class\\1{$this->modelName}Table\\2extends\\3{$this->builderOptions['packagesPrefix']}{$this->modelName}Table",
-          $defaultTableContent, 1, $count
-        );
-
-        if ($count)
-        {
-          if (false === file_put_contents($defaultTableLocation, $defaultTableContent))
-          {
-            throw new Exception(sprintf('Failed to put content into %s', $defaultTableLocation));
-          }
-        }
       }
 
-      /**
-       * if file "base-table" was created before, remove it
-       */
-      $baseTableLocation = sprintf(
-        '%s%s/%s/Base%sTable%s',
-        $baseDir,
-        $this->isPluginModel($this->modelName)
-          ? '/' . $this->getPluginNameForModel($this->modelName)
-          : '',
-        $this->builderOptions['baseClassesDirectory'],
-        $this->modelName,
-        $this->builderOptions['suffix']
-      );
+      $pluginFolder = $this->isPluginModel($this->modelName)
+        ? '/' . $this->getPluginNameForModel($this->modelName)
+        : '';
+
+      // if file "base-table" was created before, remove it
+      $baseTableLocation = "{$baseDir}{$pluginFolder}/"
+                         . "{$this->builderOptions['baseClassesDirectory']}/"
+                         . "Base{$this->modelName}Table"
+                         . " {$this->builderOptions['suffix']}"
+      ;
 
       if (! is_file($baseTableLocation))
       {
+        printf("File is missing: %s\n", $baseTableLocation);
         // Base table can be already removed, or model with "table: false"
         return;
       }
@@ -1070,11 +976,8 @@
 
       if (! $this->isPluginModel($this->modelName))
       {
-        /**
-         * There is only 1 file we should change
-         *
-         *  1. lib/model/doctrine/%model_name%Table.class.php
-         */
+        // There is 1 file we should change
+        //      1. lib/model/doctrine/%model_name%Table.class.php
         $tableLocation = "{$baseDir}/{$this->modelName}Table{$this->builderOptions['suffix']}";
 
         if (! is_file($tableLocation) || ! is_readable($tableLocation) || !is_writable($tableLocation))
@@ -1089,63 +992,43 @@
           throw new Exception(sprintf('Failed to get file %s contents', $tableLocation));
         }
 
-        /**
-         * replace invalid PHPDoc with correct
-         * from:
-         *    @return object PostTable
-         * to:
-         *    @return PostTable
-         */
+        // replace invalid PHPDoc with correct
+        $countReturn = 0;
+        $tableClassContent = preg_replace(
+          "/@return(\s+)object(\s+){$this->modelName}Table/ms",
+          "@return\\1{$this->modelName}Table",
+          $tableClassContent, 1, $countReturn
+        );
 
-        if (preg_match("/@return\s+object\s+{$this->modelName}Table\s/ms", $tableClassContent))
-        {
-          $tableClassContent = preg_replace(
-            "/@return(\s+)object(\s+){$this->modelName}Table/ms",
-            "@return\\1{$this->modelName}Table",
-            $tableClassContent, 1
-          );
-        }
+        // Keep code formatting
+        $countExtends = 0;
+        $tableClassContent = preg_replace(
+          "/class(\s+){$this->modelName}Table(\s+)extends(\s+)\w+/ms",
+          "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
+          $tableClassContent, 1, $countExtends
+        );
 
-        if (! preg_match("/class\s+{$this->modelName}Table\s+extends\s+Base{$this->modelName}Table/ms", $tableClassContent))
+        if ($countReturn || $countExtends)
         {
-          /**
-           * Keep code formatting
-           */
-          $tableClassContent = preg_replace(
-            "/class(\s+){$this->modelName}Table(\s+)extends(\s+)\w+/ms",
-            "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
-            $tableClassContent, 1
-          );
-        }
-
-        if (false === file_put_contents($tableLocation, $tableClassContent))
-        {
-          throw new Exception(sprintf('Failed to put content into %s', $tableLocation));
+          if (false === file_put_contents($tableLocation, $tableClassContent))
+          {
+            throw new Exception(sprintf('Failed to put content into %s', $tableLocation));
+          }
         }
       }
-      else
+      else // Model comes from plugin/ directory
       {
-        /**
-         * There are 2 files we need to update
-         *
-         * 1. plugins/%plugin_name%/lib/model/doctrine/plugin/Plugin%model_name%Table.class.php
-         * 2. lib/model/doctrine/%model_name%Table.class.php
-         *
-         *
-         *   File #1 contains class "Doctrine_Table",
-         *   it should be replaced with Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS)
-         *
-         *   File #2 contains something like: "class sfGuardUserTable extends PluginsfGuardUserTable"
-         *   It should be replaced with:
-         *      "class sfGuardUserTable extends BasesfGuardUserTable"
-         *
-         */
-
+        // There are 2 files we need to update
+        //     1. plugins/%plugin_name%/lib/model/doctrine/plugin/Plugin%model_name%Table.class.php
+        //     2. lib/model/doctrine/%model_name%Table.class.php
+        //
+        //   File #1 contains class "Doctrine_Table", e.g. PluginsfGuardUserTabe extends Doctrine_Table
+        //   it should be replaced with BasesfGuardUserTable
+        //
+        //   File #2 contains invalid PHPDoc in @return annotation
         $pluginName = $this->getPluginNameForModel($this->modelName);
 
-        /**
-         * File #1
-         */
+        // File #1
         $pluginTableLocation =
           sfConfig::get('sf_plugins_dir') .
           "/{$pluginName}/lib/model/doctrine" .
@@ -1164,22 +1047,12 @@
           throw new Exception(sprintf('Failed to get file %s contents', $pluginTableLocation));
         }
 
-        /**
-         * Hard to find extends class - it could be custom, or Doctrine_Table
-         */
-
-        $defaultTableClass = Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
-
-        /**
-         * Keep code formatting
-         *
-         * And I know, it's not good to change plugins files :)
-         */
-        $count = null;
+        // Keep code formatting, and I know, it's not good to change plugins files ;>
+        $count = 0;
 
         $pluginTableContent = preg_replace(
           "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)\w+/ms",
-          "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$defaultTableClass}",
+          "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
           $pluginTableContent, 1, $count
         );
 
@@ -1191,9 +1064,7 @@
           }
         }
 
-        /**
-         * File #2
-         */
+        // File #2
         $baseTableLocation = "{$baseDir}/{$pluginName}/{$this->modelName}Table{$this->builderOptions['suffix']}";
 
         if (! is_file($baseTableLocation) || ! is_readable($baseTableLocation) || ! is_writable($baseTableLocation))
@@ -1203,42 +1074,20 @@
 
         $baseTableContent = file_get_contents($baseTableLocation);
 
-        /**
-         * replace invalid PHPDoc with correct
-         * from:
-         *    [at]return object sfGuardUserTable
-         * to:
-         *    [at]return sfGuardUserTable
-         */
+        // replace invalid PHPDoc with correct
+        $count = 0;
+        $baseTableContent = preg_replace(
+          "/\@return(\s+)object(\s+){$this->modelName}Table/ms",
+          "@return\\1{$this->modelName}Table",
+          $baseTableContent, 1, $count
+        );
 
-        if (preg_match("/\@return\s+object\s+{$this->modelName}Table/ms", $baseTableContent))
+        if ($count)
         {
-          $baseTableContent = preg_replace(
-            "/\@return(\s+)object(\s+){$this->modelName}Table/ms",
-            "@return\\1{$this->modelName}Table",
-            $baseTableContent,
-            1,
-            $count
-          );
-        }
-
-        if (! preg_match("/class\s+{$this->modelName}Table\s+extends\s+Base{$this->modelName}Table/ms", $baseTableContent))
-        {
-          $count = null;
-
-          /**
-           * Keep code formatting
-           */
-          $baseTableContent = preg_replace(
-            "/class(\s+){$this->modelName}Table(\s+)extends(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table/ms",
-            "class\\1{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
-            $baseTableContent, 1, $count
-          );
-        }
-
-        if (false === file_put_contents($baseTableLocation, $baseTableContent))
-        {
-          throw new Exception(sprintf('Failed to put content into %s', $baseTableLocation));
+          if (false === file_put_contents($baseTableLocation, $baseTableContent))
+          {
+            throw new Exception(sprintf('Failed to put content into %s', $baseTableLocation));
+          }
         }
       }
     }
@@ -1254,21 +1103,14 @@
      */
     protected function getClassNameToExtendFromAfterUninstalling ()
     {
-      if (false !== ($pluginName = $this->getPluginNameForModel($this->modelName)))
+      $parentInheritedModelName = $this->getParentModel();
+
+      if (null === $parentInheritedModelName)
       {
-        return 'Doctrine_Table';
+        return Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
       }
 
-      if (null === ($parentInheritedModelName = $this->getParentModel()))
-      {
-        $inheritanceClass = 'Doctrine_Table';
-      }
-      else
-      {
-        $inheritanceClass = "{$parentInheritedModelName}Table";
-      }
-
-      return $inheritanceClass;
+      return "{$parentInheritedModelName}Table";
     }
 
     /**
