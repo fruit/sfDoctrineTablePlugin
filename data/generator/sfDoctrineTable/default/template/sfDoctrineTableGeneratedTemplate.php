@@ -19,16 +19,16 @@
    * @method <?php print $this->modelName ?>|array|bool <?php print $method ?>() <?php print $method ?>(scalar $value, int $hydrationMode = null) Finds one record by field "<?php print $column ?>"
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByPattern('andWhere%s', 'buildAndWhere') as $column => $method): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, scalar $value) Adds "AND '<?php print $column ?>' = ?" expression to the WHERE clause
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, scalar $value) Adds "AND `<?php print $column ?>` = ?" expression to the WHERE clause
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByPattern('andWhere%sIn', 'buildAndWhereIn') as $column => $method): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, array $value, bool $not = false) Adds "AND '<?php print $column ?>' IN (?)" expression to the WHERE clause
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, array $value, bool $not = false) Adds "AND `<?php print $column ?>` IN (?)" expression to the WHERE clause
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByPattern('orWhere%s', 'buildOrWhere') as $column => $method): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, scalar $value) Adds "OR '<?php print $column ?>' = ?" expression to the WHERE clause
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, scalar $value) Adds "OR `<?php print $column ?>` = ?" expression to the WHERE clause
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByPattern('orWhere%sIn', 'buildOrWhereIn') as $column => $method): ?>
-   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, array $value, bool $not = false) Adds "OR '<?php print $column ?>' IN (?)" expression to the WHERE clause
+   * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, array $value, bool $not = false) Adds "OR `<?php print $column ?>` IN (?)" expression to the WHERE clause
 <?php endforeach; ?>
 <?php foreach ($this->getPHPDocByCategory('add_counts_join') as $method => $options): ?>
    * @method <?php print $this->modelName ?>Table <?php print $method ?>() <?php print $method ?>(Doctrine_Query $q, string $with = null, $params = array()) Adds "COUNT('<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>') as <?php print $options['countFieldName'] ?>" expression to the SELECT clause as result of LEFT JOIN on "<?php print $options['relationName'] ?> <?php print $options['relationAlias'] ?>" and GROUP BY '<?php print $options['relationAlias'] ?>.<?php print $options['relationColumn'] ?>'

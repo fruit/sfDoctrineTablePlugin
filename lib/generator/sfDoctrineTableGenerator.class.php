@@ -16,17 +16,13 @@
    * @package    symfony
    * @subpackage generator
    * @author     Ilya Sabelnikov <fruit.dev@gmail.com>
+   * @todo After uninstall the inherited class does not changed to Doctrine_Table:
+   *      -abstract class PluginsfGuardUserPermissionTable extends Doctrine_Table
+   *      +abstract class PluginsfGuardUserPermissionTable extends Doctrine_Table_Scoped
    */
   class sfDoctrineTableGenerator extends sfGenerator
   {
     const DEFAULT_TABLE_CLASS = 'Doctrine_Table_Scoped';
-
-    /**
-     * Array of all the loaded models
-     *
-     * @var array
-     */
-    protected $models = array();
 
     /**
      * Array of all plugin models
@@ -85,6 +81,18 @@
     protected $methodsInUse = array();
 
     /**
+     * @var sfLogger
+     */
+    protected $logger;
+
+    /**
+     * List of files to remove after install/uninstall in case all goes well
+     *
+     * @var array
+     */
+    protected $tempFiles = array();
+
+    /**
      * Initializes the current sfGenerator instance.
      *
      * @param sfGeneratorManager A sfGeneratorManager instance
@@ -97,7 +105,8 @@
       $this->setGeneratorClass('sfDoctrineTable');
 
       $this->builderOptions = $this
-        ->getDoctrinePluginConfiguration()
+        ->getConfiguration()
+        ->getPluginConfiguration('sfDoctrinePlugin')
         ->getModelBuilderOptions()
       ;
 
@@ -105,6 +114,16 @@
         ->getConfiguration()
         ->getAllPluginPaths()
       ;
+
+      $this->logger = sfContext::getInstance()->getLogger();
+    }
+
+    /**
+     * @return sfLogger
+     */
+    protected function getLogger ()
+    {
+      return $this->logger;
     }
 
     /**
@@ -113,18 +132,6 @@
     protected function getConfiguration()
     {
       return $this->generatorManager->getConfiguration();
-    }
-
-    /**
-     *
-     * @return sfDoctrinePluginConfiguration
-     */
-    protected function getDoctrinePluginConfiguration ()
-    {
-      return $this
-        ->getConfiguration()
-        ->getPluginConfiguration('sfDoctrinePlugin')
-      ;
     }
 
     /**
@@ -137,13 +144,7 @@
     public function generate ($params = array())
     {
       $this->params = array_merge(
-        array(
-          'depth'       => 2,
-          'uninstall'   => false,
-          'no-phpdoc'   => false,
-          'minify'      => false,
-          'models'      => array(),
-        ),
+        array('depth' => 2, 'uninstall' => false, 'no-phpdoc' => false, 'minify' => false, 'models' => array()),
         $params
       );
 
@@ -152,11 +153,12 @@
         $this->methodsInUse = $this->findUsedMethodsInProject();
       }
 
-      $models = $this->params['models'] ?: $this->loadModels();
+      $models = $this->loadModels($this->params['models']);
 
       // create a form class for every Doctrine class
       foreach ($models as $model)
       {
+        $this->tempFiles  = array(); // empty list of files to remove
         $this->modelName  = $model;
         $this->table      = Doctrine_Core::getTable($this->modelName);
 
@@ -164,25 +166,34 @@
 
         if ($this->params['uninstall'] || $this->isTableGenerationDisabled())
         {
-          $this->uninstallTable();
+          $this->getLogger()->debug(sprintf('%s: Uninstalling model "%s"', __CLASS__, $model));
+
+          try
+          {
+            $this->uninstallTable();
+            $this->removeBackupFiles();
+          }
+          catch (Exception $e)
+          {
+            $this->restoreFromBackupFiles();
+          }
 
           continue;
         }
 
+        $this->getLogger()->debug(sprintf('%s: Generating base tables for model "%s"', __CLASS__, $model));
+
         $isPluginModel = $this->isPluginModel($model);
 
+        $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
         if ($isPluginModel)
         {
-          $baseDir = sfConfig::get('sf_lib_dir') . "/model/doctrine/{$this->getPluginNameForModel($model)}";
-        }
-        else
-        {
-          $baseDir = sfConfig::get('sf_lib_dir') . '/model/doctrine';
+          $baseDir .= "/{$this->getPluginNameForModel($model)}";
         }
 
-        $baseTableLocation
-          = "{$baseDir}/{$this->builderOptions['baseClassesDirectory']}/" .
-            "Base{$this->modelName}Table{$this->builderOptions['suffix']}";
+        $baseTableLocation = "{$baseDir}/{$this->builderOptions['baseClassesDirectory']}/"
+                           . "Base{$this->modelName}Table"
+                           . "{$this->builderOptions['suffix']}";
 
         if (is_file($baseTableLocation) && ! is_writable($baseTableLocation))
         {
@@ -199,18 +210,25 @@
 
         $this->buildRelationPhpdocs($model, $this->params['depth']);
 
-        if (false === file_put_contents($baseTableLocation, $this->evalTemplate('sfDoctrineTableGeneratedTemplate.php')))
-        {
-          throw new Exception(sprintf('Failed to put content into %s', $baseTableLocation));
-        }
+        $this->createBackupFile($baseTableLocation);
 
         try
         {
+          if (false === file_put_contents($baseTableLocation, $this->evalTemplate('sfDoctrineTableGeneratedTemplate.php')))
+          {
+            throw new Exception(sprintf('Failed to put content into "%s"', $baseTableLocation));
+          }
+
+          $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $baseTableLocation));
+
           $this->installTable();
+          $this->removeBackupFiles();
         }
         catch (Exception $e)
         {
-          unlink($baseTableLocation);
+          $this->getLogger()->warning(sprintf('%s: Cached exception. Reverting back modified files...', __CLASS__));
+
+          $this->restoreFromBackupFiles();
 
           throw new $e;
         }
@@ -301,29 +319,8 @@
       {
         return $this->pluginModels[$modelName];
       }
-      else
-      {
-        return false;
-      }
-    }
 
-    /**
-     * @see sfDoctrineFormGenerator
-     */
-    public function getColumns()
-    {
-      $parentModel = $this->getParentModel();
-      $parentColumns = $parentModel
-        ? array_keys(Doctrine_Core::getTable($parentModel)->getColumns())
-        : array();
-
-      $columns = array();
-      foreach (array_diff(array_keys($this->table->getColumns()), $parentColumns) as $name)
-      {
-        $columns[] = new sfDoctrineColumn($name, $this->table);
-      }
-
-      return $columns;
+      return false;
     }
 
     /**
@@ -331,15 +328,14 @@
      *
      * @return array
      */
-    protected function loadModels()
+    protected function loadModels (array $models = array())
     {
       Doctrine_Core::loadModels($this->getConfiguration()->getModelDirs());
-      $models = Doctrine_Core::getLoadedModels();
+      $models = Doctrine_Core::getLoadedModels(0 == count($models) ? null : $models);
       $models = Doctrine_Core::initializeModels($models);
       $models = Doctrine_Core::filterInvalidModels($models);
-      $this->models = $this->filterModels($models);
 
-      return $this->models;
+      return $this->filterGeneratedModels($models);
     }
 
     /**
@@ -347,7 +343,7 @@
      *
      * @return array $models Array of models to generate forms for
      */
-    protected function filterModels($models)
+    protected function filterGeneratedModels($models)
     {
       foreach ($models as $key => $model)
       {
@@ -377,13 +373,12 @@
 
     /**
      * @see sfDoctrineFormGenerator
+     * @return string|null  Find parent model in case it has inheritance
+     *                      (e.i. simple, concrete and column aggregation)
      */
     public function getParentModel()
     {
-      $baseClasses = array(
-        'Doctrine_Record',
-        'sfDoctrineRecord',
-      );
+      $baseClasses = array('Doctrine_Record', 'sfDoctrineRecord');
 
       if (isset($this->builderOptions['baseClassName']))
       {
@@ -405,6 +400,8 @@
           return $r->getName();
         }
       }
+
+      return null;
     }
 
     /**
@@ -458,7 +455,7 @@
 
       foreach ($params as $k => $v)
       {
-        $string .= ($string == '' ? '' : ',') . "{$k}={$v}";
+        $string .= (empty($string) ? '' : ',') . $k . '=' . $v;
       }
 
       return $string;
@@ -729,11 +726,9 @@
         {
           $m = sprintf($pattern, sfInflector::camelize($columnName));
 
-          $this->callableDocs[$m] = $this->inline(array(
-            'm' => $m,
-            'n' => $columnName,
-            'c' => $buildMethod,
-          ));
+          $this->callableDocs[$m] = $this->inline(
+            array('m' => $m, 'n' => $columnName, 'c' => $buildMethod)
+          );
 
           $this->generateCustomPHPDoc[$m] = true;
         }
@@ -864,14 +859,14 @@
 
         if (! is_file($tableLocation) || ! is_readable($tableLocation) || ! is_writable($tableLocation))
         {
-          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $tableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $tableLocation));
         }
 
         $tableContent = file_get_contents($tableLocation);
 
         if (false === $tableContent)
         {
-          throw new Exception(sprintf('Failed to get file %s contents', $tableLocation));
+          throw new Exception(sprintf('Failed to get file "%s" contents', $tableLocation));
         }
 
         $count = null;
@@ -887,11 +882,16 @@
 
         if ($count)
         {
+          $this->createBackupFile($tableLocation);
+
           if (false === file_put_contents($tableLocation, $tableContent))
           {
-            throw new Exception(sprintf('Failed to put contents into %s', $tableLocation));
+            throw new Exception(sprintf('Failed to put contents into "%s"', $tableLocation));
           }
+
+          $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $tableLocation));
         }
+
       }
       else
       {
@@ -912,14 +912,14 @@
 
         if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
-          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
         }
 
         $pluginTableContent = file_get_contents($pluginTableLocation);
 
         if (false === $pluginTableContent)
         {
-          throw new Exception(sprintf('Failed to get file %s contents', $pluginTableLocation));
+          throw new Exception(sprintf('Failed to get file "%s" contents', $pluginTableLocation));
         }
 
         $count = null;
@@ -932,10 +932,14 @@
 
         if ($count)
         {
+          $this->createBackupFile($pluginTableLocation);
+
           if (false === file_put_contents($pluginTableLocation, $pluginTableContent))
           {
-            throw new Exception(sprintf('Failed to put content into %s', $pluginTableLocation));
+            throw new Exception(sprintf('Failed to put content into "%s"', $pluginTableLocation));
           }
+
+          $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $pluginTableLocation));
         }
       }
 
@@ -947,19 +951,19 @@
       $baseTableLocation = "{$baseDir}{$pluginFolder}/"
                          . "{$this->builderOptions['baseClassesDirectory']}/"
                          . "Base{$this->modelName}Table"
-                         . " {$this->builderOptions['suffix']}"
+                         . "{$this->builderOptions['suffix']}"
       ;
 
       if (! is_file($baseTableLocation))
       {
-        printf("File is missing: %s\n", $baseTableLocation);
+        $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $baseTableLocation));
         // Base table can be already removed, or model with "table: false"
         return;
       }
 
       if (! is_writable($baseTableLocation))
       {
-        throw new Exception(sprintf('Base table file %s is not writable', $baseTableLocation));
+        throw new Exception(sprintf('Base table file "%s" is not writable', $baseTableLocation));
       }
 
       unlink($baseTableLocation);
@@ -982,14 +986,14 @@
 
         if (! is_file($tableLocation) || ! is_readable($tableLocation) || !is_writable($tableLocation))
         {
-          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $tableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $tableLocation));
         }
 
         $tableClassContent = file_get_contents($tableLocation);
 
         if (false === $tableClassContent)
         {
-          throw new Exception(sprintf('Failed to get file %s contents', $tableLocation));
+          throw new Exception(sprintf('Failed to get file "%s" contents', $tableLocation));
         }
 
         // replace invalid PHPDoc with correct
@@ -1010,10 +1014,14 @@
 
         if ($countReturn || $countExtends)
         {
+          $this->createBackupFile($tableLocation);
+
           if (false === file_put_contents($tableLocation, $tableClassContent))
           {
-            throw new Exception(sprintf('Failed to put content into %s', $tableLocation));
+            throw new Exception(sprintf('Failed to put content into "%s"', $tableLocation));
           }
+
+          $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $tableLocation));
         }
       }
       else // Model comes from plugin/ directory
@@ -1037,14 +1045,14 @@
 
         if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
-          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
         }
 
         $pluginTableContent = file_get_contents($pluginTableLocation);
 
         if (false === $pluginTableContent)
         {
-          throw new Exception(sprintf('Failed to get file %s contents', $pluginTableLocation));
+          throw new Exception(sprintf('Failed to get file "%s" contents', $pluginTableLocation));
         }
 
         // Keep code formatting, and I know, it's not good to change plugins files ;>
@@ -1058,10 +1066,14 @@
 
         if ($count)
         {
+          $this->createBackupFile($pluginTableLocation);
+
           if (false === file_put_contents($pluginTableLocation, $pluginTableContent))
           {
-            throw new Exception(sprintf('Failed to put content into %s', $pluginTableLocation));
+            throw new Exception(sprintf('Failed to put content into "%s"', $pluginTableLocation));
           }
+
+          $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $pluginTableLocation));
         }
 
         // File #2
@@ -1069,7 +1081,7 @@
 
         if (! is_file($baseTableLocation) || ! is_readable($baseTableLocation) || ! is_writable($baseTableLocation))
         {
-          throw new Exception(sprintf('File %s is missing or un-readable or un-writable', $this->modelName, $baseTableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $baseTableLocation));
         }
 
         $baseTableContent = file_get_contents($baseTableLocation);
@@ -1084,10 +1096,14 @@
 
         if ($count)
         {
+          $this->createBackupFile($baseTableLocation);
+
           if (false === file_put_contents($baseTableLocation, $baseTableContent))
           {
-            throw new Exception(sprintf('Failed to put content into %s', $baseTableLocation));
+            throw new Exception(sprintf('Failed to put content into "%s"', $baseTableLocation));
           }
+
+          $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $baseTableLocation));
         }
       }
     }
@@ -1159,5 +1175,97 @@
       }
 
       return $methodsInUse;
+    }
+
+    protected function createBackupFile ($originalFile)
+    {
+      if (! is_file($originalFile))
+      {
+        $this->tempFiles[$originalFile] = null;
+
+        return;
+      }
+
+      if (! is_readable($originalFile))
+      {
+        throw new Exception(sprintf('Can\'t create file "%s" backup. File is non-readable.', $originalFile));
+      }
+
+      $backupFile = "{$originalFile}.bkp";
+
+      if (is_file($backupFile))
+      {
+        if (! unlink($backupFile))
+        {
+          throw new Exception(sprintf('Can\'t remove old backup file "%s"', $backupFile));
+        }
+      }
+
+      if (! copy($originalFile, $backupFile))
+      {
+        throw new Exception(sprintf('Can\'t copy file "%s" to "%s"', $originalFile, $backupFile));
+      }
+
+      $this->tempFiles[$originalFile] = $backupFile;
+
+      $this->getLogger()->debug(sprintf('%s: Created file "%s" backup', __CLASS__, $originalFile));
+
+      return;
+    }
+
+    protected function restoreFromBackupFiles ()
+    {
+      foreach ($this->tempFiles as $originalFile => $backupFile)
+      {
+        // previous version of file never existed
+        if (null === $backupFile)
+        {
+          if (unlink($originalFile))
+          {
+            $this->getLogger()->debug(sprintf('%s: Removed file "%s" that was not existed before', __CLASS__, $originalFile));
+          }
+          else
+          {
+            $this->getLogger()->warning(sprintf('%s: Failed to removed file "%s" that was not existed before', __CLASS__, $originalFile));
+          }
+
+          continue;
+        }
+
+        if (is_file($originalFile) && ! unlink($originalFile))
+        {
+          $this->getLogger()->err(sprintf('%s: Failed to remove file "%s"', __CLASS__, $originalFile));
+
+          continue;
+        }
+
+        if (! rename($backupFile, $originalFile))
+        {
+          $this->getLogger()->err(sprintf('%s: Failed to restore file "%s" back to previous version', __CLASS__, $originalFile));
+          continue;
+        }
+
+        $this->getLogger()->debug(sprintf('%s: Restoring file "%s" from backup', __CLASS__, $originalFile));
+      }
+    }
+
+    protected function removeBackupFiles ()
+    {
+      foreach ($this->tempFiles as $originalFile => $backupFile)
+      {
+        // previous version of file never existed
+        if (null === $backupFile)
+        {
+          continue;
+        }
+
+        if (! unlink($backupFile))
+        {
+          $this->getLogger()->err(sprintf('%s: Failed to unlink backup file "%s"', __CLASS__, $backupFile));
+          continue;
+        }
+
+        $this->getLogger()->debug(sprintf('%s: Removed backup file "%s"', __CLASS__, $backupFile));
+      }
     }
   }

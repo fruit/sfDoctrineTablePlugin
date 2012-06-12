@@ -23,7 +23,8 @@
       RETURN_MODEL_NOT_FOUND      = 2,
       RETURN_TABLE_NOT_FOUND      = 3,
       RETURN_GENERATOR_NOT_FOUND  = 4,
-      RETURN_TABLE_INHERITANCE    = 5;
+      RETURN_TABLE_INHERITANCE    = 5,
+      RETURN_GENERATE_EXCEPTION   = 6;
 
     /**
      * @see sfTask
@@ -37,7 +38,7 @@
         new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED,
           'The environment', 'dev'
         ),
-        new sfCommandOption('depth', null, sfCommandOption::PARAMETER_OPTIONAL,
+        new sfCommandOption('depth', 'd', sfCommandOption::PARAMETER_REQUIRED,
           'How deeply to build join methods', 3
         ),
         new sfCommandOption('generator-class', null, sfCommandOption::PARAMETER_REQUIRED,
@@ -49,7 +50,7 @@
         new sfCommandOption('no-phpdoc', 'n', sfCommandOption::PARAMETER_NONE,
           'Whether to remove all @method comments from file'
         ),
-        new sfCommandOption('uninstall', null, sfCommandOption::PARAMETER_NONE,
+        new sfCommandOption('uninstall', 'u', sfCommandOption::PARAMETER_NONE,
           'Cleans generated base model tables, and reverts its content to default'
         ),
         new sfCommandOption('no-confirmation', 'f', sfCommandOption::PARAMETER_NONE,
@@ -107,6 +108,11 @@ EOF;
 
     protected function execute ($arguments = array(), $options = array())
     {
+      if (! sfContext::hasInstance())
+      {
+        sfContext::createInstance($this->configuration);
+      }
+
       $manager = Doctrine_Manager::getInstance();
 
       $currentTableClass = $manager->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
@@ -141,13 +147,30 @@ EOF;
         }
       }
 
-      $this->logSection('doctrine', 'generating generic table classes');
+      $this->logSection('doctrine', 'generating base table classes');
 
       if (0 >= (int) $options['depth'])
       {
         $this->logBlock('Value --depth is a number from 1 to N', 'ERROR');
 
         return self::RETURN_INVALID_DEPTH;
+      }
+
+      if (! $options['uninstall'])
+      {
+        $this->logBlock(sprintf('Using  DEPTH: %d', $options['depth']), 'COMMENT');
+        if (0 == count($arguments['name']))
+        {
+          $this->logBlock(sprintf('Using MODELS: all activated'), 'COMMENT');
+        }
+        else
+        {
+          $this->logBlock(sprintf('Using MODELS: %s', implode(', ', $arguments['name'])), 'COMMENT');
+        }
+      }
+      else
+      {
+        $this->logBlock(sprintf('Starting uninstalling process'), 'COMMENT');
       }
 
       if (! class_exists($options['generator-class']))
@@ -163,7 +186,7 @@ EOF;
         return self::RETURN_GENERATOR_NOT_FOUND;
       }
 
-      $databaseManager = new sfDatabaseManager($this->configuration);
+      new sfDatabaseManager($this->configuration);
 
       if (! empty ($arguments['name']))
       {
@@ -205,15 +228,24 @@ EOF;
         return self::RETURN_SUCCESS;
       }
 
-      $generatorManager = new sfGeneratorManager($this->configuration);
-      $generatorManager->generate($options['generator-class'], array(
-        'env'         => (string) $options['env'],
-        'depth'       => ((int) $options['depth']) - 1,
-        'no-phpdoc'   => (bool) $options['no-phpdoc'],
-        'uninstall'   => (bool) $options['uninstall'],
-        'minify'      => (bool) $options['minified'],
-        'models'      => $arguments['name'],
-      ));
+      try
+      {
+        $generatorManager = new sfGeneratorManager($this->configuration);
+        $generatorManager->generate($options['generator-class'], array(
+          'env'         => (string) $options['env'],
+          'depth'       => ((int) $options['depth']) - 1,
+          'no-phpdoc'   => (bool) $options['no-phpdoc'],
+          'uninstall'   => (bool) $options['uninstall'],
+          'minify'      => (bool) $options['minified'],
+          'models'      => $arguments['name'],
+        ));
+      }
+      catch (Exception $e)
+      {
+        $this->logBlock(sprintf('Got exception "%s" at %s:%d', $e->getMessage(), $e->getFile(), $e->getLine()), 'ERROR');
+
+        return self::RETURN_GENERATE_EXCEPTION;
+      }
 
       $properties = array();
       $iniFile = sfConfig::get('sf_config_dir') . '/properties.ini';
