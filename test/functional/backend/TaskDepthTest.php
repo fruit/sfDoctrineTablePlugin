@@ -29,6 +29,39 @@
     return;
   }
 
+  $defaultTableClass = Doctrine_Manager::getInstance()->getAttribute(Doctrine_Core::ATTR_TABLE_CLASS);
+  $tests = array(
+    "{$libDir}/sfDoctrineGuardPlugin" => array(
+      'sfGuardGroupTable' => 'PluginsfGuardGroupTable',
+      'sfGuardGroupPermissionTable' => 'PluginsfGuardGroupPermissionTable',
+      'sfGuardUserGroupTable' => 'PluginsfGuardUserGroupTable',
+      'sfGuardUserTable' => 'PluginsfGuardUserTable',
+    ),
+    $libDir => array(
+      'PostTable' => 'BasePostTable',
+      'BankTable' => $defaultTableClass,
+      'SectionTable' => 'BaseSectionTable',
+      'CultureTable' => 'BaseCultureTable',
+      'PostMediaImageTable' => 'BasePostMediaImageTable',
+    ),
+  );
+
+  foreach ($tests as $path => $models)
+  {
+    foreach ($models as $tableClassName => $parentClassName)
+    {
+      $t->ok(
+        preg_match(
+          "/class\s{$tableClassName}\sextends\s{$parentClassName}/",
+          file_get_contents("{$path}/{$tableClassName}.class.php")
+        ),
+        sprintf('Class "%s" extends from "%s"', $tableClassName, $parentClassName)
+      );
+    }
+  }
+
+  $t->diag('Checking models');
+
   $tests = array(
     "{$libDir}/sfDoctrineGuardPlugin" => array(
       'sfGuardGroup' => false,
@@ -37,6 +70,7 @@
       'sfGuardUser' => true,
     ),
     $libDir => array(
+      'Bank' => false,
       'Post' => true,
       'Section' => true,
       'Culture' => true,
@@ -44,23 +78,15 @@
     ),
   );
 
-  $t->diag('Checking models');
-
   foreach ($tests as $path => $models)
   {
     foreach ($models as $className => $isEnabledTables)
     {
-      $t->is(
-        (bool) preg_match(
-          "/class\s{$className}Table\sextends\sBase{$className}Table/",
-          file_get_contents("{$path}/{$className}Table.class.php")
-        ),
-        $isEnabledTables,
-        sprintf('Class "%sTable" %s instance of "Base%sTable"', $className, $isEnabledTables ? 'IS' : 'IS NOT', $className)
-      );
+      $baseTableFile = "{$path}/base/Base{$className}Table.class.php";
 
       if (! $isEnabledTables)
       {
+        $t->ok(! is_file($baseTableFile), sprintf('File "%s" does not exists', $baseTableFile));
         continue;
       }
 
@@ -68,10 +94,9 @@
 
       $columnsCount = count($table->getColumnNames());
 
-
       // findBy, findOneBy, addWhere, whereIn, orWhere, orWhereIn / 6 column method types
 
-      $baseTableContent = file_get_contents("{$path}/base/Base{$className}Table.class.php");
+      $baseTableContent = file_get_contents($baseTableFile);
 
       $matches = array();
       preg_match_all('/@method\s+(?:[\w\|]+)+\s+(findBy|findOneBy|andWhere|andWhereIn|orWhere|orWhereIn)\w+\(\)\s+\w+\(.+\)\s+.+/', $baseTableContent, $matches);
@@ -79,7 +104,6 @@
       $methodCount = $columnsCount * 6;
 
       $t->is(count($matches[0]), $methodCount, sprintf('%s: @method Column method types in sum 6 * %d = %d', $className, $columnsCount, $methodCount));
-
 
       $matches = array();
       // findOne, findOneBy - magically supported by Doctrine itself
@@ -97,9 +121,9 @@
   $tests = array(
     "{$libDir}/sfDoctrineGuardPlugin" => array(
       // plugin model checks
-      'sfGuardPermission'     => 'PluginsfGuardPermissionTable',
-      'sfGuardUserPermission' => 'PluginsfGuardUserPermissionTable',
-      'sfGuardUser'           => 'PluginsfGuardUserTable',
+      'sfGuardPermission'     => 'Doctrine_Table_Example',
+      'sfGuardUserPermission' => 'Doctrine_Table_Example',
+      'sfGuardUser'           => 'Doctrine_Table_Example',
     ),
     $libDir => array(
       // default model checks

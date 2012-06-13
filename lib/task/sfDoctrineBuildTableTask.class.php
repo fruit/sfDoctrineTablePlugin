@@ -129,7 +129,10 @@ EOF;
 
         if ('Doctrine_Table' === $currentTableClass)
         {
-          $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, $defaultTableClass);
+          if (! $options['uninstall'])
+          {
+            $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, $defaultTableClass);
+          }
         }
         else
         {

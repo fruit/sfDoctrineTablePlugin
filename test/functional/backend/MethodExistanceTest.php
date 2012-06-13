@@ -116,10 +116,10 @@
           'method' => 'withLeftJoinOnParentPostsViaPostsAndReferenced',
           'args' => array($cultureTable->createQuery()),
         ),
-        array(
-          'method' => 'withInnerJoinOnParentViaPostsAndPostReference',
-          'args' => array($cultureTable->createQuery()),
-        ),
+//        array(
+//          'method' => 'withInnerJoinOnParentViaPostsAndPostReference',
+//          'args' => array($cultureTable->createQuery()),
+//        ),
         array(
           'method' => 'withLeftJoinOnPostViaPostsAndParentPosts',
           'args' => array($cultureTable->createQuery()),

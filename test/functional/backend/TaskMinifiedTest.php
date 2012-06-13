@@ -65,7 +65,9 @@
         continue;
       }
 
-      $baseTableContent = file_get_contents("{$path}/base/Base{$className}Table.class.php");
+      $baseTableContent = file_get_contents($file = "{$path}/base/Base{$className}Table.class.php");
+
+      $t->diag(sprintf('File: %s', $file));
 
       $matches = array();
       preg_match_all('/@method\s+.+/', $baseTableContent, $matches);

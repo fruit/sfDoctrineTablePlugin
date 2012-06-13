@@ -16,9 +16,6 @@
    * @package    symfony
    * @subpackage generator
    * @author     Ilya Sabelnikov <fruit.dev@gmail.com>
-   * @todo After uninstall the inherited class does not changed to Doctrine_Table:
-   *      -abstract class PluginsfGuardUserPermissionTable extends Doctrine_Table
-   *      +abstract class PluginsfGuardUserPermissionTable extends Doctrine_Table_Scoped
    */
   class sfDoctrineTableGenerator extends sfGenerator
   {
@@ -153,7 +150,7 @@
         $this->methodsInUse = $this->findUsedMethodsInProject();
       }
 
-      $models = $this->loadModels($this->params['models']);
+      $models = (0 == count($this->params['models'])) ? $this->loadModels($this->params['models']) : $this->params['models'];
 
       // create a form class for every Doctrine class
       foreach ($models as $model)
@@ -171,12 +168,15 @@
           try
           {
             $this->uninstallTable();
-            $this->removeBackupFiles();
           }
           catch (Exception $e)
           {
-            $this->restoreFromBackupFiles();
+            $this->restoreFilesFromBackup();
+
+            continue;
           }
+
+          $this->removeBackupFiles();
 
           continue;
         }
@@ -222,16 +222,17 @@
           $this->getLogger()->debug(sprintf('%s: Updating file: "%s"', __CLASS__, $baseTableLocation));
 
           $this->installTable();
-          $this->removeBackupFiles();
         }
         catch (Exception $e)
         {
           $this->getLogger()->warning(sprintf('%s: Cached exception. Reverting back modified files...', __CLASS__));
 
-          $this->restoreFromBackupFiles();
+          $this->restoreFilesFromBackup();
 
           throw new $e;
         }
+
+        $this->removeBackupFiles();
       }
     }
 
@@ -328,13 +329,12 @@
      *
      * @return array
      */
-    protected function loadModels (array $models = array())
+    protected function loadModels ()
     {
       Doctrine_Core::loadModels($this->getConfiguration()->getModelDirs());
-      $models = Doctrine_Core::getLoadedModels(0 == count($models) ? null : $models);
+      $models = Doctrine_Core::getLoadedModels();
       $models = Doctrine_Core::initializeModels($models);
       $models = Doctrine_Core::filterInvalidModels($models);
-
       return $this->filterGeneratedModels($models);
     }
 
@@ -570,7 +570,7 @@
         elseif (
             ! $relation->isOneToOne()
           &&
-            '^' == $aliasFrom
+            ('^' == $aliasFrom)
           &&
             null == $relation->offsetGet('refTable')
         )
@@ -925,7 +925,7 @@
         $count = null;
 
         $pluginTableContent = preg_replace(
-          "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
+          "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)\w+/ms",
           "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
           $pluginTableContent, 1, $count
         );
@@ -1213,7 +1213,7 @@
       return;
     }
 
-    protected function restoreFromBackupFiles ()
+    protected function restoreFilesFromBackup ()
     {
       foreach ($this->tempFiles as $originalFile => $backupFile)
       {

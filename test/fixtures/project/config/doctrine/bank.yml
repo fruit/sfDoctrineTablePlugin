@@ -1,0 +1,9 @@
+detect_relations: false
+
+Bank:
+  options:
+    symfony: { form: false, filter: false, table: false }
+  columns:
+    id: { type: integer(4), primary: true, autoincrement: true }
+    title: string(255)
+    address: string(255)

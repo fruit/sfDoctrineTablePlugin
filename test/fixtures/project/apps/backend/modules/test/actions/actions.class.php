@@ -1,14 +1,14 @@
 <?php
 
   /**
-   * culture actions.
+   * test actions.
    *
    * @package    sfDoctrineTablePlugin
-   * @subpackage culture
+   * @subpackage еуые
    * @author     Ilya Sabelnikov <fruit.dev@gmail.com>
    * @version    SVN: $Id: actions.class.php 23810 2009-11-12 11:07:44Z Kris.Wallsmith $
    */
-  class cultureActions extends sfActions
+  class еуыеActions extends sfActions
   {
 
     /**
@@ -26,7 +26,7 @@
      *
      * @var $request sfWebRequest
      */
-    public function executeList (sfWebRequest $request)
+    public function executeCultureList (sfWebRequest $request)
     {
       $q = CultureTable::getInstance()->getQuery();
 
@@ -37,6 +37,26 @@
       ;
 
       $this->cultures = $q->execute();
+    }
+
+    /**
+     * Handling call the action PostList
+     *
+     * @var $request sfWebRequest
+   */
+    public function executePostList (sfWebRequest $request)
+    {
+      $q = PostTable::getInstance()->getQuery();
+
+      PostTable::getInstance()
+        ->withInnerJoinOnSection($q)
+        ->andWhereCultureIdIn($q, array(5, 12))
+        ->orWhereIsEnabled($q, 1)
+        ->withLeftJoinOnReferenced($q)
+        ->withInnerJoinOnCultureViaReferenced($q)
+      ;
+
+      $this->posts = $q->execute();
     }
 
   }
