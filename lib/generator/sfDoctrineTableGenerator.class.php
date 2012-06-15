@@ -150,11 +150,19 @@
         $this->methodsInUse = $this->findUsedMethodsInProject();
       }
 
-      $models = (0 == count($this->params['models'])) ? $this->loadModels($this->params['models']) : $this->params['models'];
+      $allModels = $this->loadModels();
+
+      $models = (0 == count($this->params['models'])) ? $allModels : array_intersect($allModels, $this->params['models']);
 
       // create a form class for every Doctrine class
       foreach ($models as $model)
       {
+        if (in_array($model, sfConfig::get('app_sfDoctrineTablePlugin_exclude_virtual_models')))
+        {
+          $this->getLogger()->debug(sprintf('Virtual model "%s" has been excluded from generating base table', $model));
+          continue;
+        }
+
         $this->tempFiles  = array(); // empty list of files to remove
         $this->modelName  = $model;
         $this->table      = Doctrine_Core::getTable($this->modelName);
@@ -225,11 +233,11 @@
         }
         catch (Exception $e)
         {
-          $this->getLogger()->warning(sprintf('%s: Cached exception. Reverting back modified files...', __CLASS__));
+          $this->getLogger()->warning(sprintf('%s: Caught an exception. Reverting back modified files...', __CLASS__));
 
           $this->restoreFilesFromBackup();
 
-          throw new $e;
+          throw $e;
         }
 
         $this->removeBackupFiles();
@@ -334,6 +342,7 @@
       $models = Doctrine_Core::getLoadedModels();
       $models = Doctrine_Core::initializeModels($models);
       $models = Doctrine_Core::filterInvalidModels($models);
+
       return $this->filterGeneratedModels($models);
     }
 
@@ -431,9 +440,13 @@
 
         $r = new ReflectionClass($parent);
 
-        if (! $r->isAbstract())
+        // not one of virtual models (e.g. sfSocialGuardUser)
+        if (! in_array($parent, sfConfig::get('app_sfDoctrineTablePlugin_exclude_virtual_models')))
         {
-          return "{$parent}Table";
+          if (! $r->isAbstract())
+          {
+            return "{$parent}Table";
+          }
         }
 
         $model = $parent;
@@ -858,7 +871,7 @@
 
         if (! is_file($tableLocation) || ! is_readable($tableLocation) || ! is_writable($tableLocation))
         {
-          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $tableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $tableLocation));
         }
 
         $tableContent = file_get_contents($tableLocation);
@@ -910,7 +923,7 @@
 
         if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
-          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $pluginTableLocation));
         }
 
         $pluginTableContent = file_get_contents($pluginTableLocation);
@@ -983,7 +996,7 @@
 
         if (! is_file($tableLocation) || ! is_readable($tableLocation) || !is_writable($tableLocation))
         {
-          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $tableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $tableLocation));
         }
 
         $tableClassContent = file_get_contents($tableLocation);
@@ -1042,7 +1055,7 @@
 
         if (! is_file($pluginTableLocation) || ! is_readable($pluginTableLocation) || ! is_writable($pluginTableLocation))
         {
-          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $pluginTableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $pluginTableLocation));
         }
 
         $pluginTableContent = file_get_contents($pluginTableLocation);
@@ -1077,7 +1090,7 @@
 
         if (! is_file($baseTableLocation) || ! is_readable($baseTableLocation) || ! is_writable($baseTableLocation))
         {
-          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $this->modelName, $baseTableLocation));
+          throw new Exception(sprintf('File "%s" is missing or un-readable or un-writable', $baseTableLocation));
         }
 
         $baseTableContent = file_get_contents($baseTableLocation);

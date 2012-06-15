@@ -1,13 +1,25 @@
 all:
   sfDoctrineTablePlugin:
-    custom_table_class: Doctrine_Table_Scoped
+
+    # Model names which does not have physical models
+    # but only extends an existing (e.g. sfSocialPlugin has model sfSocialGuardUser)
+    exclude_virtual_models: []
+
+    # Given below finder_* options used to find which methods
+    # are used in your project and further remove then in production environment
+
+    # List of directories where business logic are located
     finder_search_in:
       - %SF_APPS_DIR%
       - %SF_LIB_DIR%
+    # List of folders to prune
     finder_prune_folders:
       - base
       - vendor
+    # List of folders to discard
     finder_discard_folders: []
+    # List of filenames to add
     finder_name:
       - "*.php"
+    # List of filenames to skip
     finder_not_name: []
