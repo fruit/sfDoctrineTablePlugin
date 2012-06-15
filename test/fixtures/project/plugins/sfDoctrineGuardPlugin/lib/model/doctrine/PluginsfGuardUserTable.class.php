@@ -8,7 +8,7 @@
  * @author     Fabien Potencier <fabien.potencier@symfony-project.com>
  * @version    SVN: $Id: PluginsfGuardUserTable.class.php 25546 2009-12-17 23:27:55Z Jonathan.Wage $
  */
-abstract class PluginsfGuardUserTable extends Doctrine_Table
+abstract class PluginsfGuardUserTable extends Doctrine_Table_Example
 {
   /**
    * Retrieves a sfGuardUser object by username and is_active flag.

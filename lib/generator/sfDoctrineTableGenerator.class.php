@@ -311,7 +311,6 @@
      * Get the name of the plugin a model belongs to
      *
      * @param string $modelName
-     *
      * @return string|bool Plugin name
      */
     public function getPluginNameForModel($modelName)
@@ -869,11 +868,10 @@
           throw new Exception(sprintf('Failed to get file "%s" contents', $tableLocation));
         }
 
-        $count = null;
-
         // If previously "extends" class was not Doctrine_Table?
         // Leave Doctrine_Table, in README is described uninstallation process
         // (build-models should be executed)
+        $count = 0;
         $tableContent = preg_replace(
           "/class(\s+){$this->modelName}Table(\s+)extends(\s+)Base{$this->modelName}Table/ms",
           "class\\1{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
@@ -922,8 +920,7 @@
           throw new Exception(sprintf('Failed to get file "%s" contents', $pluginTableLocation));
         }
 
-        $count = null;
-
+        $count = 0;
         $pluginTableContent = preg_replace(
           "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)\w+/ms",
           "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3{$this->getClassNameToExtendFromAfterUninstalling()}",
@@ -1057,7 +1054,6 @@
 
         // Keep code formatting, and I know, it's not good to change plugins files ;>
         $count = 0;
-
         $pluginTableContent = preg_replace(
           "/class(\s+){$this->builderOptions['packagesPrefix']}{$this->modelName}Table(\s+)extends(\s+)\w+/ms",
           "class\\1{$this->builderOptions['packagesPrefix']}{$this->modelName}Table\\2extends\\3Base{$this->modelName}Table",
@@ -1226,7 +1222,7 @@
           }
           else
           {
-            $this->getLogger()->warning(sprintf('%s: Failed to removed file "%s" that was not existed before', __CLASS__, $originalFile));
+            $this->getLogger()->err(sprintf('%s: Failed to removed file "%s" that was not existed before', __CLASS__, $originalFile));
           }
 
           continue;
@@ -1249,6 +1245,13 @@
       }
     }
 
+    /**
+     * Deletes backup files for current model.
+     * In case backup file does not exists - removes original file because
+     * before installation such file never existed
+     *
+     * @return void
+     */
     protected function removeBackupFiles ()
     {
       foreach ($this->tempFiles as $originalFile => $backupFile)

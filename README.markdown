@@ -74,7 +74,7 @@ _Upgrading_
 
     ./symfony plugin:uninstall sfDoctrineTablePlugin
 
-  Then, build your models, to be sure, all is O.K.
+  Then, re-build your models, to be sure, all is O.K.
 
     ./symfony doctrine:build-model
 
@@ -100,6 +100,20 @@ _Upgrading_
 
   In case you have your own-custom Doctrine_Table class (e.g. ``My_Doctrine_Table``), then you
   need to make it inherited from class ``Doctrine_Table_Scoped``, not from ``Doctrine_Table`` class.
+  This can be done inside ``config/ProjectConfiguration.class.php``:
+
+    [php]
+    <?php
+
+    class ProjectConfiguration extends sfProjectConfiguration
+    {
+      // ...
+
+      public function configureDoctrine (Doctrine_Manager $manager)
+      {
+        $manager->setAttribute(Doctrine_Core::ATTR_TABLE_CLASS, 'My_Doctrine_Table');
+      }
+    }
 
   Here is the default plugin configuration. All configuration options are used to
   find all PHP files where you keep a business logic.
@@ -209,7 +223,15 @@ _Upgrading_
 
 ## 6.1 <a id="h6_1">Usage</a>
 
-    ./symfony doctrine:build-table [--application[="..."]] [--env="..."] [--depth[="..."]] [--generator-class="..."] [-m|--minified] [-n|--no-phpdoc] [--uninstall] [-f|--no-confirmation] [name1] ... [nameN]
+    ./symfony doctrine:build-table [name1] ... [nameN] \
+        [--application[="..."]] \
+        [--env="..."] \
+        [--generator-class="..."] \
+        [-d|--depth="..."] \
+        [-m|--minified] \
+        [-n|--no-phpdoc] \
+        [-u|--uninstall] \
+        [-f|--no-confirmation]
 
   For full task details, please refer to the task help block:
 
@@ -276,7 +298,7 @@ _Upgrading_
   That is - no extra code, smallest file size. Things are done by implementing ``PHPDoc`` directive @method.
 
   Here is code sample of generated base table for model City - file ``BaseCityTable.class.php``
-  preview on [http://pastie.org/private/qhlsjqlxxzohe0r0jfpew](http://pastie.org/private/qhlsjqlxxzohe0r0jfpew "Preview")
+  preview on [http://pastie.org/private/gvwhdvyyakiofbtskuog3w](http://pastie.org/private/gvwhdvyyakiofbtskuog3w "Preview")
 
   As you can observe, file contains additional ``@c`` directives:
 
@@ -381,11 +403,12 @@ before existing one.
     [sfDoctrineTable] functional/backend/MethodWhereTest.................ok
     [sfDoctrineTable] functional/backend/TaskDepthTest...................ok
     [sfDoctrineTable] functional/backend/TaskGeneratorTest...............ok
+    [sfDoctrineTable] functional/backend/TaskInvalidArgumentsTest........ok
     [sfDoctrineTable] functional/backend/TaskMinifiedTest................ok
     [sfDoctrineTable] functional/backend/TaskNoPhpDocTest................ok
     [sfDoctrineTable] functional/backend/TaskUninstallTest...............ok
      All tests successful.
-     Files=7, Tests=140
+     Files=8, Tests=149
 
 # 11. <a id="misc">Misc</a>
 

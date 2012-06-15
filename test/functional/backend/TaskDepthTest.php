@@ -39,7 +39,7 @@
     ),
     $libDir => array(
       'PostTable' => 'BasePostTable',
-      'BankTable' => $defaultTableClass,
+      'BankTable' => 'Doctrine_Table',
       'SectionTable' => 'BaseSectionTable',
       'CultureTable' => 'BaseCultureTable',
       'PostMediaImageTable' => 'BasePostMediaImageTable',

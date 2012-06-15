@@ -50,10 +50,10 @@
 
       PostTable::getInstance()
         ->withInnerJoinOnSection($q)
-        ->andWhereCultureIdIn($q, array(5, 12))
+        ->andWhereCultureIdIn($q, array(10, 30))
         ->orWhereIsEnabled($q, 1)
         ->withLeftJoinOnReferenced($q)
-        ->withInnerJoinOnCultureViaReferenced($q)
+        ->withInnerJoinOnCultureViaReferenced($q, 'rs_c.lang != ?', array('en_GB'))
       ;
 
       $this->posts = $q->execute();

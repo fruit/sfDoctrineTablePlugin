@@ -75,34 +75,38 @@ The [{$this->namespace}:{$this->name}|INFO] task creates table classes from the 
 
   [./symfony {$this->namespace}:{$this->name}|INFO]
 
-The task reads the schema information project's schema YAML files in [config/doctrine/*.yml|COMMENT]
-and each enabled plugin-level schema YAML files [plugins/%plugin%/config/doctrine/*.yml|COMMENT].
+The task reads the schema information project's schema YAML files
+in [config/doctrine/*.yml|COMMENT] and each enabled plugin-level schema YAML
+files [plugins/%plugin%/config/doctrine/*.yml|COMMENT].
 
 This task MODIFIES custom classes in [lib/model/doctrine|COMMENT].
 And also it replaces files in [lib/model/doctrine/base|COMMENT].
 
 To increase/decrease joins depth use option [--depth|COMMENT]:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --depth=2|INFO]
+  [./symfony {$this->namespace}:{$this->name} --depth=2|INFO]
 
 To remove all @method hints from the base tables pass the [--no-phpdoc|COMMENT]/[-n|COMMENT] flag:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --no-phpdoc|INFO]
+  [./symfony {$this->namespace}:{$this->name} --no-phpdoc|INFO]
 
-To minify generated base table size for production use the [--minified|COMMENT]/[-m|COMMENT] flag
-combining with [--no-phpdoc|COMMENT]/[-n|COMMENT] flag:
+Use the [--minified|COMMENT]/[-m|COMMENT] combining with [--no-phpdoc|COMMENT]/[-n|COMMENT] flag
+to minify generated base table size on production environment:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --minified --no-phpdoc|INFO]
+  [./symfony {$this->namespace}:{$this->name} --minified --no-phpdoc|INFO]
 
-When you deside to stop using plugin, uninstall it by passing [--uninstall|COMMENT] flag:
+When you deside to stop using plugin, uninstall it by passing [--uninstall|COMMENT]/[-u|COMMENT] flag:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --uninstall|INFO]
+  [./symfony {$this->namespace}:{$this->name} --uninstall|INFO]
 
-Sometimes it's necessary to skip confirmation dialogs automatically with positive answer.
-For such cases use the [--no-confirmation|COMMENT]/[-f|COMMENT] flag:
+Sometimes it's necessary to skip confirmation dialogs automatically with
+positive answer. For such cases use the [--no-confirmation|COMMENT]/[-f|COMMENT] flag:
 
-    [./symfony {$this->namespace}:{$this->name} --env=%YOUR_ENV% --depth=2 --no-confirmation|INFO]
+  [./symfony {$this->namespace}:{$this->name} --depth=2 --no-confirmation|INFO]
 
+To enable custom generator use the [--generator-class|COMMENT] option:
+
+  [./symfony {$this->namespace}:{$this->name} --generator-class=MyDoctrineTableGenerator|INFO]
 EOF;
     }
 
