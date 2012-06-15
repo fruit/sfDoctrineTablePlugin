@@ -90,6 +90,24 @@
     protected $tempFiles = array();
 
     /**
+     * List of models that does not have physical models and used to extend
+     * existing plugin/project models.
+     * Such models should be declared as abstract, but some
+     * of them are not - that is what generates error cases
+     *
+     * @var array
+     */
+    protected $virtualModels = array();
+
+
+    /**
+     * Number of E_* errors was caught during template generation
+     *
+     * @var integer
+     */
+    protected $handledErrorCount = 0;
+
+    /**
      * Initializes the current sfGenerator instance.
      *
      * @param sfGeneratorManager A sfGeneratorManager instance
@@ -157,12 +175,6 @@
       // create a form class for every Doctrine class
       foreach ($models as $model)
       {
-        if (in_array($model, sfConfig::get('app_sfDoctrineTablePlugin_exclude_virtual_models')))
-        {
-          $this->getLogger()->debug(sprintf('Virtual model "%s" has been excluded from generating base table', $model));
-          continue;
-        }
-
         $this->tempFiles  = array(); // empty list of files to remove
         $this->modelName  = $model;
         $this->table      = Doctrine_Core::getTable($this->modelName);
@@ -180,12 +192,10 @@
           catch (Exception $e)
           {
             $this->restoreFilesFromBackup();
-
             continue;
           }
 
           $this->removeBackupFiles();
-
           continue;
         }
 
@@ -222,7 +232,22 @@
 
         try
         {
-          if (false === file_put_contents($baseTableLocation, $this->evalTemplate('sfDoctrineTableGeneratedTemplate.php')))
+          // silent during evaling template
+          $this->handledErrorCount = 0;
+          set_error_handler(array($this, 'errorHandler'));
+          $content = $this->evalTemplate('sfDoctrineTableGeneratedTemplate.php');
+          restore_error_handler();
+
+          if (0 < $this->handledErrorCount)
+          {
+            throw new Exception(sprintf(
+              "During template generation %d error(-s) was occured. " .
+                "Errors can be found in log files.",
+              $this->handledErrorCount
+            ));
+          }
+
+          if (false === file_put_contents($baseTableLocation, $content))
           {
             throw new Exception(sprintf('Failed to put content into "%s"', $baseTableLocation));
           }
@@ -339,7 +364,22 @@
     protected function loadModels ()
     {
       Doctrine_Core::loadModels($this->getConfiguration()->getModelDirs());
+
       $models = Doctrine_Core::getLoadedModels();
+
+      foreach ($models as $model)
+      {
+        $key = array_search(get_parent_class($model), $models);
+
+        if (false === $key)
+        {
+          continue;
+        }
+
+        $this->virtualModels[] = $models[$key];
+        unset($models[$key]);
+      }
+
       $models = Doctrine_Core::initializeModels($models);
       $models = Doctrine_Core::filterInvalidModels($models);
 
@@ -359,7 +399,6 @@
         if (Doctrine_Core::getTable($model)->isGenerator())
         {
           unset($models[$key]);
-
           continue;
         }
       }
@@ -403,9 +442,13 @@
         }
 
         $r = new ReflectionClass($model);
-        if (! $r->isAbstract())
+
+        if (! in_array($model, $this->virtualModels))
         {
-          return $r->getName();
+          if (! $r->isAbstract())
+          {
+            return $r->getName();
+          }
         }
       }
 
@@ -440,8 +483,7 @@
 
         $r = new ReflectionClass($parent);
 
-        // not one of virtual models (e.g. sfSocialGuardUser)
-        if (! in_array($parent, sfConfig::get('app_sfDoctrineTablePlugin_exclude_virtual_models')))
+        if (! in_array($parent, $this->virtualModels))
         {
           if (! $r->isAbstract())
           {
@@ -1222,6 +1264,11 @@
       return;
     }
 
+    /**
+     * Restores updated file back to pre-installing/pre-uninstalling state
+     *
+     * @return null
+     */
     protected function restoreFilesFromBackup ()
     {
       foreach ($this->tempFiles as $originalFile => $backupFile)
@@ -1244,7 +1291,6 @@
         if (is_file($originalFile) && ! unlink($originalFile))
         {
           $this->getLogger()->err(sprintf('%s: Failed to remove file "%s"', __CLASS__, $originalFile));
-
           continue;
         }
 
@@ -1263,7 +1309,7 @@
      * In case backup file does not exists - removes original file because
      * before installation such file never existed
      *
-     * @return void
+     * @return null
      */
     protected function removeBackupFiles ()
     {
@@ -1283,5 +1329,26 @@
 
         $this->getLogger()->debug(sprintf('%s: Removed backup file "%s"', __CLASS__, $backupFile));
       }
+    }
+
+    /**
+     * Handles all errors while evaluing template, also counts them
+     *
+     * @param integer $code
+     * @param strin $msg
+     * @param string $file
+     * @param integer $line
+     *
+     * @return boolean
+     */
+    protected function errorHandler ($code, $msg, $file, $line)
+    {
+      $this->getLogger()->err(sprintf(
+        '%s: [%d] %s at %s:%d', __CLASS__, $code, $msg, $file, $line
+      ));
+
+      $this->handledErrorCount ++;
+
+      return true;
     }
   }

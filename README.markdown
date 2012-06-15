@@ -122,11 +122,6 @@ _Upgrading_
     ---
     all:
       sfDoctrineTablePlugin:
-
-        # Model names which does not have physical models
-        # but just extends an existing (e.g. sfSocialPlugin has model sfSocialGuardUser)
-        exclude_virtual_models: []
-
         # Given below finder_* options used to find which methods
         # are used in your project and further remove then in production environment
         finder_search_in: [%SF_APPS_DIR%, %SF_LIB_DIR%]   # List of directories where business logic are located

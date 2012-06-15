@@ -38,7 +38,7 @@
       'sfGuardGroup'            => 'PluginsfGuardGroupTable',
       'sfGuardGroupPermission'  => 'PluginsfGuardGroupPermissionTable',
       'sfGuardUserGroup'        => 'PluginsfGuardUserGroupTable',
-      'sfGuardUser'             => 'PluginsfGuardUserTable',
+      'sfGuardUser'             => 'sfSocialGuardUserTable',
     ),
     $libDir => array(
       'Post'            => 'Doctrine_Table_Example',

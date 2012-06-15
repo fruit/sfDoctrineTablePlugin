@@ -38,11 +38,11 @@
         new sfCommandOption('env', null, sfCommandOption::PARAMETER_REQUIRED,
           'The environment', 'dev'
         ),
-        new sfCommandOption('depth', 'd', sfCommandOption::PARAMETER_REQUIRED,
-          'How deeply to build join methods', 3
-        ),
         new sfCommandOption('generator-class', null, sfCommandOption::PARAMETER_REQUIRED,
           'The generator class', 'sfDoctrineTableGenerator'
+        ),
+        new sfCommandOption('depth', 'd', sfCommandOption::PARAMETER_REQUIRED,
+          'How deeply to build join methods', 3
         ),
         new sfCommandOption('minified', 'm', sfCommandOption::PARAMETER_NONE,
           'Minifies the base tables by cleaning out from the unused PHPDoc\'s'
@@ -161,23 +161,6 @@ EOF;
         $this->logBlock('Value --depth is a number from 1 to N', 'ERROR');
 
         return self::RETURN_INVALID_DEPTH;
-      }
-
-      if (! $options['uninstall'])
-      {
-        $this->logBlock(sprintf('Using  DEPTH: %d', $options['depth']), 'COMMENT');
-        if (0 == count($arguments['name']))
-        {
-          $this->logBlock(sprintf('Using MODELS: all activated'), 'COMMENT');
-        }
-        else
-        {
-          $this->logBlock(sprintf('Using MODELS: %s', implode(', ', $arguments['name'])), 'COMMENT');
-        }
-      }
-      else
-      {
-        $this->logBlock(sprintf('Starting uninstalling process'), 'COMMENT');
       }
 
       if (! class_exists($options['generator-class']))

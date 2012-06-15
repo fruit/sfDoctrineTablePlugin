@@ -35,7 +35,7 @@
       'sfGuardGroupTable' => 'PluginsfGuardGroupTable',
       'sfGuardGroupPermissionTable' => 'PluginsfGuardGroupPermissionTable',
       'sfGuardUserGroupTable' => 'PluginsfGuardUserGroupTable',
-      'sfGuardUserTable' => 'PluginsfGuardUserTable',
+      'sfGuardUserTable' => 'sfSocialGuardUserTable',
     ),
     $libDir => array(
       'PostTable' => 'BasePostTable',

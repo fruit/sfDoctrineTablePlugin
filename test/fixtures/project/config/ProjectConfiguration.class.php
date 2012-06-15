@@ -21,6 +21,7 @@
         'sfDoctrinePlugin',
         'sfDoctrineTablePlugin',
         'sfDoctrineGuardPlugin',
+        'sfSocialPlugin',
       ));
     }
 

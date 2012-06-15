@@ -22,8 +22,8 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2012-06-15</date>
-  <time>14:20:50</time>
+  <date>2012-06-16</date>
+  <time>02:40:00</time>
   <version>
     <release>2.0.0</release>
     <api>2.0.0</api>
@@ -35,9 +35,9 @@
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
     * [Feature] Added task no-phpdoc option
-    * [Feature] Task's option "--minified" now removes clean up unused methods from generated base tables
+    * [Feature] Task's option "--minified" now clean-ups unused methods from generated base tables
     * [Feature] Added logger to monitor task execution
-    * [Feature] Auto-retore changed files from backup in case error appears when installing/un-installing base tables
+    * [Feature] Auto-restore changed files from backup in case error appears when installing/un-installing base tables
     * [Updated] Task tests
     * [Updated] Another namespace for plugin configuration variables
   </notes>
@@ -54,9 +54,9 @@
           </dir>
         </dir>
       </dir>
-      <file name="README" md5sum="07d701e48341cedf240f46848ea2b104" role="data" />
+      <file name="README" md5sum="487b364063c38a8a22e5c1cbe4c1892f" role="data" />
       <dir name="config">
-        <file name="app.yml" md5sum="830e4f3dbf6a5fde342e2265881b89b2" role="data" />
+        <file name="app.yml" md5sum="412a702ce140d561ac0ab24a1ed627a4" role="data" />
         <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="c502fab9d3b0082d10fa6d5e1653361f" role="data" />
       </dir>
       <file name="LICENSE" md5sum="e879218e6f332b0b4017fab8a2925ce9" role="data" />
@@ -69,10 +69,10 @@
           </dir>
         </dir>
         <dir name="generator">
-          <file name="sfDoctrineTableGenerator.class.php" md5sum="70f60797282516a7e97dd2097ec9d82e" role="data" />
+          <file name="sfDoctrineTableGenerator.class.php" md5sum="60a04a6571d712c5684f96d4768c8929" role="data" />
         </dir>
         <dir name="task">
-          <file name="sfDoctrineBuildTableTask.class.php" md5sum="c394c8e6e1e90bd3a18b89915b973bdb" role="data" />
+          <file name="sfDoctrineBuildTableTask.class.php" md5sum="54b46ad5e6326b2c05c164069e90aeab" role="data" />
         </dir>
       </dir>
     </dir>
@@ -105,13 +105,13 @@
         <release>stable</release>
         <api>stable</api>
       </stability>
-      <date>2012-06-15</date>
+      <date>2012-06-16</date>
       <license uri="http://www.symfony-project.com/license">MIT</license>
       <notes>
         * [Feature] Added task no-phpdoc option
-        * [Feature] Task's option "--minified" now removes clean up unused methods from generated base tables
+        * [Feature] Task's option "--minified" now clean-ups unused methods from generated base tables
         * [Feature] Added logger to monitor task execution
-        * [Feature] Auto-retore changed files from backup in case error appears when installing/un-installing base tables
+        * [Feature] Auto-restore changed files from backup in case error appears when installing/un-installing base tables
         * [Updated] Task tests
         * [Updated] Another namespace for plugin configuration variables
       </notes>
