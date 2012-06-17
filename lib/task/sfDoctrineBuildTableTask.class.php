@@ -60,7 +60,7 @@
 
       $this->addArguments(array(
         new sfCommandArgument(
-          'name',
+          'model',
           sfCommandArgument::OPTIONAL | sfCommandArgument::IS_ARRAY,
           "Model name(-s), if nothing is passed, all models will be used."
         ),
@@ -178,9 +178,9 @@ EOF;
 
       new sfDatabaseManager($this->configuration);
 
-      if (! empty ($arguments['name']))
+      if (! empty ($arguments['model']))
       {
-        foreach ($arguments['name'] as $modelName)
+        foreach ($arguments['model'] as $modelName)
         {
           Doctrine_Core::modelsAutoload($modelName);
 
@@ -227,7 +227,7 @@ EOF;
           'no-phpdoc'   => (bool) $options['no-phpdoc'],
           'uninstall'   => (bool) $options['uninstall'],
           'minify'      => (bool) $options['minified'],
-          'models'      => $arguments['name'],
+          'models'      => $arguments['model'],
         ));
       }
       catch (Exception $e)
@@ -261,13 +261,13 @@ EOF;
 
       $builderOptions = $sfDoctrinePlugin->getModelBuilderOptions();
 
-      if (! empty($arguments['name']))
+      if (! empty($arguments['model']))
       {
         $baseTableFilenames = array_map(
           function ($modelName) use ($builderOptions) {
             return "Base{$modelName}Table{$builderOptions['suffix']}";
           },
-          $arguments['name']
+          $arguments['model']
         );
       }
       else

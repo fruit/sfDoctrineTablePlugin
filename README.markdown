@@ -9,9 +9,9 @@ users only (perfect implementation in [NetBeans 7.2](http://netbeans.org/downloa
 # Table of contents
 
  1. <a href="#desc">Description</a>
- 1. <a href="#screenshot">Screenshot</a>
+ 1. <a href="#screenshot">Screen-shot</a>
  1. <a href="#install">Installation</a>
- 1. <a href="#uninstall">Uninstallation</a>
+ 1. <a href="#uninstall">Uninstall</a>
  1. <a href="#setup">Setup</a>
  1. <a href="#task">Task</a>
  1. <a href="#how">How it works</a>
@@ -19,6 +19,12 @@ users only (perfect implementation in [NetBeans 7.2](http://netbeans.org/downloa
  1. <a href="#problem">Known problem</a>
  1. <a href="#tdd">TDD</a>
  1. <a href="#misc">Misc</a>
+
+# Release notes
+
+Plugin version v2.X.X has new API and is not compatible with v1.X.X.
+To install new major version you must uninstall current version.
+How to correctly uninstall plugin you can find in README file.
 
 # 1. <a id="desc">Description</a>
 
@@ -59,9 +65,9 @@ _Upgrading_
     git pull origin master
     cd ../..
 
-# 4. <a id="uninstall">Uninstallation</a>
+# 4. <a id="uninstall">Uninstall</a>
 
-  Unusual uninstallation process! First of all you should rollback your base table
+  Unusual uninstall process! First of all you should rollback your base table
   class inheritance and remove generated base table classes for models. All that
   you can make by executing:
 
@@ -70,7 +76,7 @@ _Upgrading_
   In case, you had your own-custom table class (e.g. ``My_Doctrine_Table``),
   you need to revert back it inherited by ``Doctrine_Table``.
 
-  Then usual uninstallation process:
+  Then usual uninstall process:
 
     ./symfony plugin:uninstall sfDoctrineTablePlugin
 
@@ -80,7 +86,7 @@ _Upgrading_
 
 # 5. <a id="setup">Setup</a>
 
-## 5.1. <a id="h5_1">Check plugin is enabled</a>
+## 5.1. <a id="h5_1">Make sure plugin is enabled</a>
 
     [php]
     <?php
@@ -127,8 +133,8 @@ _Upgrading_
         finder_search_in: [%SF_APPS_DIR%, %SF_LIB_DIR%]   # List of directories where business logic are located
         finder_prune_folders: [base, vendor]              # List of folders to prune
         finder_discard_folders: []                        # List of folders to discard
-        finder_name: ["*.php"]                            # List of filenames to add
-        finder_not_name: []                               # List of filenames to skip
+        finder_name: ["*.php"]                            # List of file-names to add
+        finder_not_name: []                               # List of file-names to skip
 
 ### 5.2.1 <a id="h5_2_2">Model</a>
 
@@ -211,7 +217,7 @@ _Upgrading_
 
 ## 6.1 <a id="h6_1">Usage</a>
 
-    ./symfony doctrine:build-table [name1] ... [nameN] \
+    ./symfony doctrine:build-table [model1] ... [modelN] \
         [--application[="..."]] \
         [--env="..."] \
         [--generator-class="..."] \
@@ -227,7 +233,7 @@ _Upgrading_
 
 ## 6.2 <a id="h6_2">Build base tables</a>
 
-  Run this task each time you update the schema.yml and rebuild models:
+  Run this task each time you update the ``schema.yml`` and rebuild models:
 
     ./symfony doctrine:build-table
 
@@ -243,7 +249,7 @@ _Upgrading_
 
   When you deploy your code to production you need to minimize generated base
   table class file size by passing flag ``--no-phpdoc`` (e.i. base tables without
-  @method hints) and ``--minified`` (e.i. do not generate methods, that aren't used in project).
+  ``@method`` hints) and ``--minified`` (e.i. do not generate methods, that aren't used in project).
 
     ./symfony doctrine:build-table --env=prod --minified --no-phpdoc
 
@@ -251,7 +257,7 @@ _Upgrading_
 
   By default task ``doctrine:build-model`` will generate base tables for each
   existing model, unless you disable it. To disable it you need to add option
-  ``table: false`` to the specific model schema.yml:
+  ``table: false`` to the specific model ``schema.yml``:
 
     [yaml]
     ---
@@ -305,7 +311,7 @@ _Upgrading_
 
   This information helps to build requested method on the fly by implementing magic
   method ``__call``. Parsing PHPDoc on the fly is fast (&lt; 0.003 sec) even the
-  base table is not minified and contains @method hints (about 700kb).
+  base table is not minified and contains ``@method`` hints (about 700kb).
 
   Minified base tables (see <a id="#h6_4">Optimize tables for production</a>) are much smaller (about &lt; 4kb) and
   parsing is much faster (&lt; 0.0001 sec).
@@ -314,7 +320,7 @@ _Upgrading_
 
   Copy default generator skeleton folder to your project:
 
-    cp -a plugins/sfDoctrineTablePlugin/data/generator/ data/.
+    cp -R plugins/sfDoctrineTablePlugin/data/generator/ data/.
 
   Create new generator class (e.g. ``MyDoctrineTableGenerator``) by extending it from ``sfDoctrineTableGenerator``.
   And use it when you run ``doctrine:build-table`` task by passing ``--generator-class`` option:
@@ -329,7 +335,7 @@ _Upgrading_
 before existing one.
   This happens due to aliases are generated based on component name.
 
-  For example model owns 2 relations Company and Category:
+  For example model owns 2 relations "Company" and "Category":
 
     [yaml]
     ---
@@ -342,7 +348,7 @@ before existing one.
           class: Category
           local: category_id
 
-  Assume we need to join both tables Company and Category from the table Article.
+  Assume we need to join both tables "Company" and "Category" from the table "Article".
 
     [php]
     <?php
@@ -355,10 +361,10 @@ before existing one.
 
     $q->select('a.*, c.title, ca.slug')->execute();
 
-  All relations starts with "C", this mean that joined Company table maps to "c"
-  and Category maps to the "ca" (due to "c" is used).
+  All relations starts with "C", this mean that joined "Company" table maps to "c"
+  and "Category" maps to the "ca" (due to "c" is used).
 
-  You have made a database refactoring and relation "Company" was removed.
+  You have made a database re-factoring and relation "Company" was removed.
   Next step is to fix the query given above by removing all things related to a "Company":
 
     [php]
@@ -371,7 +377,7 @@ before existing one.
 
     $q->select('a.*, ca.slug')->execute();
 
-  Code will be still erroneous, because the new generated alias for table Category maps to the letter "c".
+  Code will be still erroneous, because the new generated alias for table "Category" maps to the letter "c".
   So, to fix code sample, you need to replace "ca.slug" with "c.slug".
 
     [php]

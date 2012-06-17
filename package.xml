@@ -22,8 +22,8 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2012-06-16</date>
-  <time>02:40:00</time>
+  <date>2012-06-17</date>
+  <time>23:50:00</time>
   <version>
     <release>2.0.0</release>
     <api>2.0.0</api>
@@ -54,7 +54,7 @@
           </dir>
         </dir>
       </dir>
-      <file name="README" md5sum="487b364063c38a8a22e5c1cbe4c1892f" role="data" />
+      <file name="README" md5sum="2eeb94da1c08e6ef5c481571714bdf6a" role="data" />
       <dir name="config">
         <file name="app.yml" md5sum="412a702ce140d561ac0ab24a1ed627a4" role="data" />
         <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="c502fab9d3b0082d10fa6d5e1653361f" role="data" />
@@ -72,7 +72,7 @@
           <file name="sfDoctrineTableGenerator.class.php" md5sum="60a04a6571d712c5684f96d4768c8929" role="data" />
         </dir>
         <dir name="task">
-          <file name="sfDoctrineBuildTableTask.class.php" md5sum="54b46ad5e6326b2c05c164069e90aeab" role="data" />
+          <file name="sfDoctrineBuildTableTask.class.php" md5sum="b8aa17b685f85b599fe40274090ab3ac" role="data" />
         </dir>
       </dir>
     </dir>
@@ -105,7 +105,7 @@
         <release>stable</release>
         <api>stable</api>
       </stability>
-      <date>2012-06-16</date>
+      <date>2012-06-17</date>
       <license uri="http://www.symfony-project.com/license">MIT</license>
       <notes>
         * [Feature] Added task no-phpdoc option
