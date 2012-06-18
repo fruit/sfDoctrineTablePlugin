@@ -13,7 +13,7 @@
     The sfDoctrineTablePlugin generates feature packed base tables to each model.
     Base table contains PHPDocs of available pre-generated WHERE, COUNT
     and JOIN considering table relations and its depth. List of new available
-    methods are accessed through the PHPDoc tag @method and is suitable for IDE
+    methods are accessed through the PHPDoc @method annotation and is suitable for IDE
     users only.
   </description>
   <lead>
@@ -22,10 +22,10 @@
     <email>fruit.dev@gmail.com</email>
     <active>yes</active>
   </lead>
-  <date>2012-06-17</date>
-  <time>23:50:00</time>
+  <date>2012-06-18</date>
+  <time>23:00:00</time>
   <version>
-    <release>2.0.0</release>
+    <release>2.0.1</release>
     <api>2.0.0</api>
   </version>
   <stability>
@@ -34,12 +34,7 @@
   </stability>
   <license uri="http://www.symfony-project.com/license">MIT</license>
   <notes>
-    * [Feature] Added task no-phpdoc option
-    * [Feature] Task's option "--minified" now clean-ups unused methods from generated base tables
-    * [Feature] Added logger to monitor task execution
-    * [Feature] Auto-restore changed files from backup in case error appears when installing/un-installing base tables
-    * [Updated] Task tests
-    * [Updated] Another namespace for plugin configuration variables
+    * [Updated] README
   </notes>
   <contents>
     <dir name="/">
@@ -54,10 +49,10 @@
           </dir>
         </dir>
       </dir>
-      <file name="README" md5sum="2eeb94da1c08e6ef5c481571714bdf6a" role="data" />
+      <file name="README" md5sum="9fb8db4cacead0fe040f40246c654123" role="data" />
       <dir name="config">
         <file name="app.yml" md5sum="412a702ce140d561ac0ab24a1ed627a4" role="data" />
-        <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="c502fab9d3b0082d10fa6d5e1653361f" role="data" />
+        <file name="sfDoctrineTablePluginConfiguration.class.php" md5sum="1d80085817ee2a461f36eed948659aa3" role="data" />
       </dir>
       <file name="LICENSE" md5sum="e879218e6f332b0b4017fab8a2925ce9" role="data" />
       <dir name="lib">
@@ -96,6 +91,21 @@
   </dependencies>
   <phprelease />
   <changelog>
+    <release>
+      <version>
+        <release>2.0.1</release>
+        <api>2.0.0</api>
+      </version>
+      <stability>
+        <release>stable</release>
+        <api>stable</api>
+      </stability>
+      <date>2012-06-18</date>
+      <license uri="http://www.symfony-project.com/license">MIT</license>
+      <notes>
+        * [Updated] README
+      </notes>
+    </release>
     <release>
       <version>
         <release>2.0.0</release>

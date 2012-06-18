@@ -3,8 +3,8 @@
 The ``sfDoctrineTablePlugin`` generates feature packed base tables for models.
 Base table contains PHPDocs of available pre-generated ``WHERE``, ``COUNT``
 and ``JOIN`` methods, considering table relations and its depth. List of pre-generated PHPDoc
-methods are accessed through the tag @method and are suitable for IDE
-users only (perfect implementation in [NetBeans 7.2](http://netbeans.org/downloads/index.html "NetBeans Download page"))
+methods are accessed through the ``@method`` annotation and is suitable for IDE
+users only (perfect implementation in [NetBeans](http://netbeans.org/downloads/index.html "NetBeans Download page") since v7.1)
 
 # Table of contents
 
@@ -24,7 +24,7 @@ users only (perfect implementation in [NetBeans 7.2](http://netbeans.org/downloa
 
 Plugin version v2.X.X has new API and is not compatible with v1.X.X.
 To install new major version you must uninstall current version.
-How to correctly uninstall plugin you can find in README file.
+How to correctly uninstall plugin you can find in v1.X.X's ``README`` file.
 
 # 1. <a id="desc">Description</a>
 
@@ -36,7 +36,7 @@ template by extending it (see <a href="#extend">8. Extending the generator</a>).
 
 # 2. <a id="screenshot">Screenshot</a>
 
-[![Auto-completion in NetBeans 7.1 Pic1](https://lh6.googleusercontent.com/-V4Pap4aTKBs/T9C2lqajhgI/AAAAAAAABh8/lD-umgg5vDw/w696-h563-k/Tooltip_001.png "Click to zoom-in")](https://lh6.googleusercontent.com/-V4Pap4aTKBs/T9C2lqajhgI/AAAAAAAABh8/lD-umgg5vDw/s925/Tooltip_001.png "Preview")
+[![Auto-completion in NetBeans](https://lh6.googleusercontent.com/-V4Pap4aTKBs/T9C2lqajhgI/AAAAAAAABh8/lD-umgg5vDw/w696-h563-k/Tooltip_001.png "Click to zoom-in")](https://lh6.googleusercontent.com/-V4Pap4aTKBs/T9C2lqajhgI/AAAAAAAABh8/lD-umgg5vDw/s925/Tooltip_001.png "Preview")
 
 # 3. <a id="install">Installation</a>
 
@@ -106,7 +106,7 @@ _Upgrading_
 
   In case you have your own-custom Doctrine_Table class (e.g. ``My_Doctrine_Table``), then you
   need to make it inherited from class ``Doctrine_Table_Scoped``, not from ``Doctrine_Table`` class.
-  This can be done inside ``config/ProjectConfiguration.class.php``:
+  It can be done inside ``config/ProjectConfiguration.class.php``:
 
     [php]
     <?php
@@ -121,7 +121,7 @@ _Upgrading_
       }
     }
 
-  Here is the default plugin configuration. All configuration options are used to
+  Here is a default plugin configuration. All the configuration options are used to
   find all PHP files where you keep a business logic.
 
     [yaml]
@@ -138,19 +138,19 @@ _Upgrading_
 
 ### 5.2.1 <a id="h5_2_2">Model</a>
 
-  By default base tables will be generated to all models and to all enabled
+  By the default base tables will be generated for all models and to for only enabled
   plugins that contains schema files. Occasionally, you won't use
-  all models to query its data, some of them will be used to save data. In
-  such cases is reasonable to disable them from generating it. How to do that
+  all models to query its data. Only some of them will be used to save data. In
+  such cases is reasonable to disable such models from generating base tables. How to do that
   please refer to <a href="#h6_5">6.5. Turning off base table generation for
   specific models</a>.
 
   According to my own experience, the most profit you will get in case you disable
   automatic relation detection (``detect_relations: false``) and setup only important
-  to you relations by hand. Advantages to the solutions are clear generated method
-  names and small file size (APC will be thankful to you).
+  to you relations by hand. Advantages to the solutions are clear and good-looking method
+  names.
 
-  Here is small ``schema.yml`` example:
+  Here is a small ``schema.yml`` example:
 
     [yaml]
     ---
@@ -180,7 +180,7 @@ _Upgrading_
           foreignAlias: Cities
 
 
-  After base table are generated, you can see following methods beside other methods:
+  After executing ``doctrine:build-tables`` you can see following methods beside other methods:
 
     [php]
     <?php
@@ -204,7 +204,7 @@ _Upgrading_
       LEFT JOIN city c3 ON c2.capital_city_id = c3.id
       LEFT JOIN country c4 ON c3.id = c4.capital_city_id
 
-  And here is DQL (``$q->getDql()``) will looks like:
+  And DQL (``$q->getDql()``) will looks like:
 
     [sql]
     FROM City ci
@@ -233,13 +233,13 @@ _Upgrading_
 
 ## 6.2 <a id="h6_2">Build base tables</a>
 
-  Run this task each time you update the ``schema.yml`` and rebuild models:
+  Run this task each time you update the ``schema.yml`` file and rebuild the models:
 
     ./symfony doctrine:build-table
 
 ## 6.3 <a id="h6_3">Customize JOIN's deepness</a>
 
-  By default JOINs deepness is 3 (superfluously enough), but you can adjust it
+  By the default JOIN's deepness is set to 3 (superfluously enough), but you can adjust it
   by passing flag ``--depth``. The level of depth does not affects on speed
   in production environment (see <a id="#h6_4">Optimize tables for production</a>):
 
@@ -247,17 +247,18 @@ _Upgrading_
 
 ## 6.4 <a id="h6_4">Optimize tables for production</a>
 
-  When you deploy your code to production you need to minimize generated base
-  table class file size by passing flag ``--no-phpdoc`` (e.i. base tables without
-  ``@method`` hints) and ``--minified`` (e.i. do not generate methods, that aren't used in project).
+  When you deploy your code to production server, you can minimize generated base
+  table file size by passing flag ``--no-phpdoc`` (e.i. base tables without
+  ``@method`` hints) and combining with ``--minified`` (e.i. do not generate methods,
+  that aren't used in project).
 
     ./symfony doctrine:build-table --env=prod --minified --no-phpdoc
 
 ## 6.5. <a id="h6_5">Turning off base table generation for specific models</a>
 
-  By default task ``doctrine:build-model`` will generate base tables for each
-  existing model, unless you disable it. To disable it you need to add option
-  ``table: false`` to the specific model ``schema.yml``:
+  By the default ``doctrine:build-model`` task  will generate base tables for each
+  existing-active model, unless you disable it. To disable model you need to set ``table`` value to be ``false``:
+  ``table: false`` for specific model in ``schema.yml`` file:
 
     [yaml]
     ---
@@ -265,20 +266,20 @@ _Upgrading_
       options:
         symfony: { table: false }
 
-  Then rebuild models:
+  Then rebuild models by executing:
 
     ./symfony doctrine:build-model
 
-  And generate updated base tables:
+  And then, generate an updated version of base tables:
 
     ./symfony doctrine:build-table
 
-  There are some nuances to know. When you disable model(-s), which base table(-s) was generated before,
+  There are some nuances to keep in mind. When you disable model(-s), which base table(-s) was generated before,
   task ``doctrine:build-table`` will uninstall disabled base table automatically.
 
 ## 6.6. <a id="h6_6">Base tables generation for a specific models</a>
 
-  Now you can pass manually a list of models you would like to generate base tables
+  Now you can pass manually a list of models you would like to generate the base tables
 
     ./symfony doctrine:build-table City Country
 
@@ -289,12 +290,12 @@ _Upgrading_
 # 7. <a id="how">How it works</a>
 
   All is very tricky. Each available method for code-completion does not contains code at all.
-  That is - no extra code, smallest file size. Things are done by implementing ``PHPDoc`` directive @method.
+  That is - no extra code, smallest file size. Things are done by implementing ``PHPDoc`` annotation ``@method``.
 
   Here is code sample of generated base table for model City - file ``BaseCityTable.class.php``
   preview on [http://pastie.org/private/gvwhdvyyakiofbtskuog3w](http://pastie.org/private/gvwhdvyyakiofbtskuog3w "Preview")
 
-  As you can observe, file contains additional ``@c`` directives:
+  As you can observe, file contains additional ``@c`` annotations:
 
     [php]
     <?php
@@ -318,12 +319,13 @@ _Upgrading_
 
 # 8. <a id="extend">Extending the generator</a>
 
-  Copy default generator skeleton folder to your project:
+  Copy the default generator skeleton folder to your project:
 
     cp -R plugins/sfDoctrineTablePlugin/data/generator/ data/.
 
-  Create new generator class (e.g. ``MyDoctrineTableGenerator``) by extending it from ``sfDoctrineTableGenerator``.
-  And use it when you run ``doctrine:build-table`` task by passing ``--generator-class`` option:
+  Then, create a new generator class (e.g. ``MyDoctrineTableGenerator``) by extending
+  it from ``sfDoctrineTableGenerator`` class. And use it when you run
+  ``doctrine:build-table`` task by passing ``--generator-class`` option:
 
     ./symfony doctrine:build-table --depth=2 --generator-class=MyDoctrineTableGenerator
 
@@ -333,7 +335,7 @@ _Upgrading_
 
   Joined table aliases may change when existing relation is removed or new relations are added
 before existing one.
-  This happens due to aliases are generated based on component name.
+  It happens due to aliases are generated based on component name.
 
   For example model owns 2 relations "Company" and "Category":
 
@@ -377,7 +379,7 @@ before existing one.
 
     $q->select('a.*, ca.slug')->execute();
 
-  Code will be still erroneous, because the new generated alias for table "Category" maps to the letter "c".
+  Code will be erroneous, because the new generated alias for table "Category" maps to the letter "c".
   So, to fix code sample, you need to replace "ca.slug" with "c.slug".
 
     [php]
@@ -385,11 +387,11 @@ before existing one.
 
     $q->select('a.*, c.slug')->execute();
 
-  If anybody can help me to elegantly solve this issue - I will be pleasantly thankful.
+  If anybody can elegantly help me to solve this issue - I will be pleasantly thankful.
 
 # 10. <a id="tdd">TDD</a>
 
-  Tested basic functionality.
+  The basic functionality is tested.
 
     [plain]
 

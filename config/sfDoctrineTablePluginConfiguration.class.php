@@ -17,7 +17,7 @@
    */
   class sfDoctrineTablePluginConfiguration extends sfPluginConfiguration
   {
-    const VERSION = '2.0.0';
+    const VERSION = '2.0.1';
 
     /**
      * @see sfPluginConfiguration
